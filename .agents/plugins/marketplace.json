@@ -2420,6 +2420,21 @@
       "description": "Structured AI writing workflow for planning, critique, revision, translation, style distillation, and opt-in local preference learning."
     },
     {
+      "name": "wtfm",
+      "displayName": "WTFM",
+      "source": {
+        "source": "local",
+        "path": "./plugins/SupportPages-io/wtfm"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Writes illustrated end-user help articles from a codebase, with screenshots rendered locally from the real interface code.",
+      "icon": "./plugins/SupportPages-io/wtfm/assets/icon.png"
+    },
+    {
       "name": "yylo",
       "displayName": "YYLO",
       "source": {
