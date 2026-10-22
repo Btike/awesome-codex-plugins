@@ -3310,6 +3310,21 @@
       "icon": "./plugins/zlsbksdxl/codex-exa/assets/logo.svg"
     },
     {
+      "name": "exotic-car-rental-skills",
+      "displayName": "Exotic Car Rental Skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/sergebulaev/exotic-car-rental-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Codex-ready bundle for people renting exotic and luxury cars in the US with a native .codex-plugin manifest and 6 skills that find who rents a given Lamborghini, Ferrari, Rolls-Royce or G-Wagon in a city at published daily rates from a free read-only market data MCP server, work out the real rental cost, compare cars, pick event cars, plan a weekend and check a rental company; also works in Claude Code.",
+      "icon": "./plugins/sergebulaev/exotic-car-rental-skills/assets/icon.svg"
+    },
+    {
       "name": "fantasy-football-manager",
       "displayName": "Fantasy Football Manager",
       "source": {

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
-  "last_updated": "2026-10-21",
-  "total": 319,
+  "last_updated": "2026-10-22",
+  "total": 320,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -2239,6 +2239,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/zlsbksdxl/codex-exa/HEAD/plugins/exa/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "Exotic Car Rental Skills",
+      "url": "https://github.com/sergebulaev/exotic-car-rental-skills",
+      "owner": "sergebulaev",
+      "repo": "exotic-car-rental-skills",
+      "description": "Codex-ready bundle for people renting exotic and luxury cars in the US with a native .codex-plugin manifest and 6 skills that find who rents a given Lamborghini, Ferrari, Rolls-Royce or G-Wagon in a city at published daily rates from a free read-only market data MCP server, work out the real rental cost, compare cars, pick event cars, plan a weekend and check a rental company; also works in Claude Code.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/sergebulaev/exotic-car-rental-skills/HEAD/.codex-marketplace/exotic-car-rental-skills/.codex-plugin/plugin.json"
     },
     {
       "name": "Fantasy Football Manager",
