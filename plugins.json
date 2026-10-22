@@ -3,7 +3,7 @@
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
   "last_updated": "2026-10-22",
-  "total": 320,
+  "total": 321,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -2799,6 +2799,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/olegvg/resume-tailor-plugin/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "Revid",
+      "url": "https://github.com/tmakersas/revid-skills",
+      "owner": "tmakersas",
+      "repo": "revid-skills",
+      "description": "Research what goes viral, make finished short-form videos (voice, captions, music, AI footage) and post them to TikTok, YouTube, Instagram and X through Revid's hosted MCP server.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/tmakersas/revid-skills/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Roomcomm",

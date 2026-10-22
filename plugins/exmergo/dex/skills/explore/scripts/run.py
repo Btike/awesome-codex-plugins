@@ -24,7 +24,11 @@ Two execution modes, chosen automatically:
   - Monorepo checkout (this repo): `packages/dex-core` is found above the skill,
     so the engine runs from an editable local install. This is what makes the
     wrapper work before the package is published.
-  - Installed plugin: no local package is present, so the pinned PyPI release is
+  - Installed plugin: the plugin ships `packages/dex-core` beside the skills, so
+    the engine is built from that bundled source. There is no .git in a plugin
+    cache, so the build reports hatch-vcs's fallback_version, which
+    scripts/prepare_release.sh sets to the same release as DEX_CORE_VERSION.
+  - Neither present (a skill copied on its own): the pinned PyPI release is
     installed hermetically by uv.
 
 That environment is uv's own, and `--no-project` is what keeps it that way. Without

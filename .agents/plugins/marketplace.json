@@ -4135,6 +4135,21 @@
       "icon": "./plugins/olegvg/resume-tailor-plugin/assets/icon.svg"
     },
     {
+      "name": "revid",
+      "displayName": "Revid",
+      "source": {
+        "source": "local",
+        "path": "./plugins/tmakersas/revid-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Research what goes viral, make finished short-form videos (voice, captions, music, AI footage) and post them to TikTok, YouTube, Instagram and X through Revid's hosted MCP server.",
+      "icon": "./plugins/tmakersas/revid-skills/assets/logo.png"
+    },
+    {
       "name": "roomcomm",
       "displayName": "Roomcomm",
       "source": {
