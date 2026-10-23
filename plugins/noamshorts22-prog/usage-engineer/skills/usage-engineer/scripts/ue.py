@@ -505,6 +505,16 @@ def cmd_audit(args) -> int:
     for k, v in c["top_repeated_calls"].items():
         name, ahash = k.split("|")
         lines.append(f"  repeat {v}x: {name} args#{ahash}")
+    if args.by_day:
+        lines.append("")
+        lines.append("per day (each session counted on the day it started):")
+        lines.append(f"  {'date':<10} {'sessions':>8} {'requests':>8} {'input':>13} {'cached':>13}"
+                     f" {'output':>10} {'total':>13}")
+        for day, v in sorted(c["by_day"].items()):
+            lines.append(f"  {day:<10} {v['sessions']:>8} {v['requests']:>8} {v['input_tokens']:>13,}"
+                         f" {v['cached_input_tokens']:>13,} {v['output_tokens']:>10,} {v['total_tokens']:>13,}")
+        if not c["by_day"]:
+            lines.append("  UNKNOWN: no session in range had usable token usage")
     if report["opencode"]:
         o = report["opencode"]
         lines.append("")
@@ -1571,6 +1581,7 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--max-file-mb", type=int, default=40, help="skip rollout files larger than this")
     a.add_argument("--no-opencode", action="store_true")
     a.add_argument("--json-out", help="write redacted JSON report to this path")
+    a.add_argument("--by-day", action="store_true", help="also print Codex token totals per day")
     a.set_defaults(func=cmd_audit)
 
     s = sub.add_parser("summarize-log", help="compact tool-result view; full copy retained on disk")

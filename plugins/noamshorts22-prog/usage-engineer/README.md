@@ -40,6 +40,7 @@ The skill itself is [skills/usage-engineer/SKILL.md](skills/usage-engineer/SKILL
 
 ```
 ue audit                      # where did my Codex/OpenCode usage go? (read-only, redacted)
+ue audit --by-day             # Codex token totals per day, to line up with your quota meter
 ue summarize-log --file build.log   # keep every error, drop the noise, store the full copy
 ue map build --project .      # snapshot the project; `map check` tells you when it is stale
 ```
@@ -48,7 +49,7 @@ ue map build --project .      # snapshot the project; `map check` tells you when
 
 | command | what it does | writes |
 |---|---|---|
-| `audit` | usage baseline from local Codex rollout JSONL and the OpenCode SQLite DB, with waste signals; redacted | optional JSON via `--json-out` |
+| `audit` | usage baseline from local Codex rollout JSONL and the OpenCode SQLite DB, with waste signals; `--by-day` adds a per-day table; redacted | optional JSON via `--json-out` |
 | `summarize-log --file X` | compact view that keeps every failure/error line plus context; stores the byte-exact original and prints its path | `--out` dir |
 | `prepare-context --project DIR` | small task pack: request, constraints, git commit/diff id, path hashes, verification commands | `--out` md + json |
 | `map build` / `map check` | versioned project map; `check` exits 1 and lists files when anything changed | map json |
@@ -60,7 +61,7 @@ ue map build --project .      # snapshot the project; `map check` tells you when
 | `bench list/plan` | the 4 frozen paired benchmark cases and the exact commands (no model calls) | stdout |
 | `bench run --runner codex --max-calls N --confirm` | opt-in live A/B run with a hard invocation cap and no automatic retries | state dir |
 | `doctor` | environment check: versions, config paths, profiles | stdout |
-| `selftest` | 34 deterministic tests, no model calls | - |
+| `selftest` | 35 deterministic tests, no model calls | - |
 
 ## Measure before you believe
 
