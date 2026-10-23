@@ -203,6 +203,7 @@ Third-party plugins built by the community. [PRs welcome](#contributing)!
 - [Codex Tasklist](https://github.com/martinille/codex-tasklist) - A persistent per-session task list for Codex CLI with a live, scrollable panel across terminals through native integrations or a launcher with tmux fallback.
 - [Codex TUI Proof](https://github.com/bnc4vk/codex-tui-proof) - Visually validate real local terminal UIs in Codex's in-app browser with screenshots and session evidence.
 - [Codex Usage and Resets](https://github.com/joelfarthing/codex-usage-and-resets) - Turns Codex usage into planning facts with linear pace, projected exhaustion, banked-reset expirations, and conservative unexpected-reset detection.
+- [Codex–Claude Council](https://github.com/hamza-aziz-ai/codex-claude-council) - ChatGPT (through the Codex CLI) and Claude (through Claude Code) answer independently, then reply to each other round after round until both agree on one answer, read-only and on your own subscriptions.
 - [Commit Narrator](./plugins/mturac/commit-narrator) - Generate semantic commit message from staged diff, including the _why_.
 - [Context Guard](https://github.com/GreenLv/codex-context-guard) - Preserves authoritative requirements and verification evidence across long-running Codex tasks and context compaction.
 - [Core Learning](https://github.com/everclear077/codex-learning-plugin) - Guided learning with Socratic practice, Feynman teach-back, spaced recall, evidence-based project assessment, and optional local Anki export.
