@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
-  "last_updated": "2026-10-22",
-  "total": 321,
+  "last_updated": "2026-10-23",
+  "total": 322,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -2139,6 +2139,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/entropy-data/dataproduct-builder-dbt/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "deed.page",
+      "url": "https://github.com/f-o-x11/deed-page-skill",
+      "owner": "f-o-x11",
+      "repo": "deed-page-skill",
+      "description": "Publish an HTML file or static folder from Codex to a permanent `https://{slug}.deed.page/` URL through the bundled deed.page skill and remote MCP server, with no account.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/f-o-x11/deed-page-skill/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "deja",

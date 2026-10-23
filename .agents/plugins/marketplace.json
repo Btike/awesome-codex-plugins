@@ -3160,6 +3160,21 @@
       "description": "Full data-product lifecycle on dbt for Entropy Data: scaffold, audit, and integrate projects with ODCS, ODPS, OpenLineage, and GitHub Actions."
     },
     {
+      "name": "deed-page",
+      "displayName": "deed.page",
+      "source": {
+        "source": "local",
+        "path": "./plugins/f-o-x11/deed-page-skill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Publish an HTML file or static folder from Codex to a permanent `https://{slug}.deed.page/` URL through the bundled deed.page skill and remote MCP server, with no account.",
+      "icon": "./plugins/f-o-x11/deed-page-skill/assets/icon.png"
+    },
+    {
       "name": "deja-vu",
       "displayName": "deja",
       "source": {
