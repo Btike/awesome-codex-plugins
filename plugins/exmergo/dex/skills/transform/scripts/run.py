@@ -74,7 +74,7 @@ from pathlib import Path
 # Rewritten by scripts/prepare_release.sh to the tagged version. The connector
 # extra is deliberately NOT part of this pin: it is chosen at runtime (see
 # _resolve_connector), so a release artifact is connector-neutral.
-DEX_CORE_VERSION = "1.15.3"
+DEX_CORE_VERSION = "1.16.0"
 
 # Connector id -> packaging extra. The engine's connector ids and the pyproject
 # extras share names, so this is the identity set today. An unknown or unset
@@ -255,6 +255,15 @@ _VALUE_FLAGS = (
 # either backend and therefore never needs the renderer.
 _SEMANTIC_RENDERING_MODES = ("values", "query")
 
+# The dbt semantic layer authoring commands (#639). Each validates definitions
+# against MetricFlow's schemas before writing a plan, and therefore needs the
+# `semantic` extra (which ships MetricFlow).
+_SEMANTIC_AUTHORING_COMMANDS = (
+    ("semantic", "define"),
+    ("semantic", "update"),
+    ("semantic", "plan"),
+)
+
 # The commands that can read a native Ossie semantic layer, as (group,
 # subcommand). The `ossie` extra is `jsonschema` and nothing heavier, so it is
 # taken whenever the layer *might* be read rather than resolved from
@@ -430,12 +439,50 @@ def _child_env() -> dict[str, str]:
     return {key: value for key, value in os.environ.items() if key not in withheld}
 
 
+# The first uv release whose vendored CA roots exclude the emSign ones withdrawn
+# after the eMudhra key incident. An older uv still installs dex, so this is a
+# warning and never a refusal: it is the user's toolchain, and the fix is theirs
+# to run. See https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576
+_UV_CA_FLOOR = (0, 13, 4)
+
+
+def _uv_ca_warning() -> str | None:
+    """A warning when the uv on PATH predates the emSign CA removal, else None.
+
+    Silent when the version cannot be read: a probe that guesses would warn
+    about a uv it never identified.
+    """
+
+    try:
+        # uv from PATH on purpose, like every other invocation here.
+        completed = subprocess.run(
+            ["uv", "--version"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=_child_env(),
+        )
+        found = tuple(int(part) for part in completed.stdout.split()[1].split(".")[:3])
+    except (OSError, subprocess.SubprocessError, IndexError, ValueError):
+        return None
+    if found >= _UV_CA_FLOOR:
+        return None
+    floor = ".".join(str(part) for part in _UV_CA_FLOOR)
+    return (
+        f"uv {'.'.join(str(part) for part in found)} trusts the emSign CA roots "
+        f"that were withdrawn after a key compromise; uv {floor} and later do "
+        "not. Update it with `uv self update` (or your package manager). An "
+        "agent relays this to the user rather than updating uv itself."
+    )
+
+
 def _envelope(
     status: str,
     *,
     data: dict[str, object] | None = None,
     errors: list[str] | None = None,
     reason: str | None = None,
+    warnings: list[str] | None = None,
 ) -> str:
     """One JSON line in the engine's envelope shape, built by hand.
 
@@ -461,7 +508,7 @@ def _envelope(
                 "estimate_quality": None,
                 "unit": None,
             },
-            "warnings": [],
+            "warnings": warnings or [],
             "diffs": [],
             "errors": errors or [],
             "reason": reason,
@@ -511,6 +558,7 @@ def _warm(argv: list[str]) -> int:
             )
         )
         return 1
+    stale_uv = _uv_ca_warning()
     print(
         _envelope(
             "ok",
@@ -520,6 +568,7 @@ def _warm(argv: list[str]) -> int:
                 "extras": extras,
                 "elapsed_seconds": elapsed,
             },
+            warnings=[stale_uv] if stale_uv else [],
         )
     )
     return 0
@@ -550,6 +599,11 @@ def main() -> int:
         return 1
     if _WARM_FLAG in argv:
         return _warm([arg for arg in argv if arg != _WARM_FLAG])
+    # The engine prints the envelope, and stdout carries that and nothing else,
+    # so a stale uv is reported on stderr here and in `--warm`'s own envelope.
+    stale_uv = _uv_ca_warning()
+    if stale_uv:
+        print(f"dex: {stale_uv}", file=sys.stderr)
     # The connector extra is always installed; `explore cluster` and
     # `explore semantic` add what only they need, so the default install stays
     # light for every repo that runs neither.

@@ -28,7 +28,7 @@ import time
 import unittest
 from pathlib import Path
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 TOOL_DIR = Path(__file__).resolve().parent
 _LEGACY_STATE = TOOL_DIR.parent / "state"  # pre-0.2 checkouts kept state next to ue.py
 STATE_DIR = Path(os.environ.get("UE_STATE_DIR")

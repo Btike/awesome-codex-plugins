@@ -49,7 +49,9 @@ npx skills add exmergo/dex --agent codex
 > **dex needs [`uv`](https://docs.astral.sh/uv/) on your `PATH`.** No agent installs
 > it for you. Run `brew install uv` or `pipx install uv`, or see the
 > [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/)
-> for other platforms. `uv` supplies Python and the engine.
+> for other platforms. `uv` supplies Python and the engine. Use uv 0.13.4 or
+> later (`uv self update`): earlier releases still trust the emSign CA roots
+> withdrawn after their keys were compromised.
 
 In Claude Code the skills appear as `/dex:explore`, `/dex:transform`, and
 `/dex:maintain` and trigger on matching intent. Update later with
@@ -305,7 +307,7 @@ treat these scores as guide posts. ([evaluation](https://docs.exmergo.com/dex/re
 
 ## What dex sends where
 
-- **On install**, `uv` downloads the pinned engine (and a Python 3.11+ if you have none) from PyPI or your configured index.
+- **On install**, `uv` downloads the pinned engine (and a Python 3.11 to 3.14 if you have none) from PyPI or your configured index.
 - **Your warehouse** gets read-only SQL, with credentials from your existing credential chain.
 - **dbt Cloud** is contacted only if you enable the hosted semantic layer.
 - **dbt-core**, when dex runs it, sends dbt Labs its own anonymous usage statistics unless you turn them off. `transform deps` downloads the packages your `packages.yml` declares.

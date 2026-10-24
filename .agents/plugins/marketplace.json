@@ -1668,6 +1668,20 @@
       "icon": "./plugins/ouonet/praxis/assets/logo-mark.svg"
     },
     {
+      "name": "pro-launch",
+      "displayName": "Pro Launch",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jack-reson8/pro-launch"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Takes an app or product from idea to launch with phase gates for naming and domain checks, references, style frames, UI loop, GTM and shipping."
+    },
+    {
       "name": "codex-project-autopilot",
       "displayName": "Project Autopilot",
       "source": {
@@ -1932,6 +1946,20 @@
       "category": "Development & Workflow",
       "description": "Finds the pinned Python dependency APIs that changed after the model's training cutoff, tests which ones the model actually gets wrong, and writes one-line AGENTS.md notes that are kept only if their example type-checks.",
       "icon": "./plugins/MohammadHijjawi97/since-cutoff/assets/icon.svg"
+    },
+    {
+      "name": "skill-skill",
+      "displayName": "Skill Skill",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jack-reson8/skill-skill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Writes agent skills that change the output and lints SKILL.md against the Agent Skills spec with a 0-100 health score."
     },
     {
       "name": "skill-sync-publisher",
@@ -2581,6 +2609,21 @@
       "category": "Tools & Integrations",
       "description": "Send explicit Telegram messages from Codex and local AI agents through a Telegram bot token and chat id.",
       "icon": "./plugins/jerryfane/agentgram/assets/agentgram-logo.svg"
+    },
+    {
+      "name": "agentmart",
+      "displayName": "AgentMart",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mustafaakmese/agentmart-plugins"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Hosted webhook inbox, memory locker, wake-up calls, uptime and heartbeat watch and ask-my-human utilities for agents over remote MCP with OAuth sign-in, paid from a prepaid balance the human tops up.",
+      "icon": "./plugins/mustafaakmese/agentmart-plugins/assets/icon.svg"
     },
     {
       "name": "aident-loadout",
@@ -4034,6 +4077,20 @@
       "description": "Create and drive plori AI agents in persistent cloud environments over remote MCP, with OAuth auto-discovery and a bundled Agent Skill."
     },
     {
+      "name": "post",
+      "displayName": "Post",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jack-reson8/post-skill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Makes Xiaohongshu and X share-image sets that look native, with App Store poster layouts, real screenshots and app-UI mocks."
+    },
+    {
       "name": "posteverywhere",
       "displayName": "PostEverywhere",
       "source": {
@@ -4061,6 +4118,20 @@
       "category": "Tools & Integrations",
       "description": "Live hotel and flight prices compared across Booking.com, Agoda, Trip.com and Traveloka, in USD, through the hosted PriceWin MCP server with a search skill.",
       "icon": "./plugins/PriceDotWin/pricewin-agent-plugin/assets/pricewin-logo-400.png"
+    },
+    {
+      "name": "pro-motion",
+      "displayName": "Pro Motion",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jack-reson8/pro-motion"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Plans a launch film audio first, then renders motion graphics in code from an HTML canvas to MP4, cut to the beat."
     },
     {
       "name": "prompt-to-asset",
@@ -4163,6 +4234,20 @@
       "category": "Tools & Integrations",
       "description": "Identify and remove AI watermarks and provenance metadata (Gemini and Veo marks, SynthID, C2PA, EXIF) in images and video you generated yourself, plus provenance metadata in audio.",
       "icon": "./plugins/wiltodelta/remove-ai-watermarks/assets/icon.svg"
+    },
+    {
+      "name": "renhua",
+      "displayName": "Renhua",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jack-reson8/renhua"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Writes Chinese posts and product copy in a real person's voice, removing AI tells and adding humor."
     },
     {
       "name": "resume-tailor",
@@ -4727,6 +4812,21 @@
       "category": "Tools & Integrations",
       "description": "Generate and edit AI images, video, audio, and 3D on the WaveSpeed platform with a bundled MCP server and CLI skill, including live catalog search, local-file upload, and price quotes before running.",
       "icon": "./plugins/WaveSpeedAI/codex-plugin-wavespeed-cli/assets/icon.png"
+    },
+    {
+      "name": "webly",
+      "displayName": "Webly",
+      "source": {
+        "source": "local",
+        "path": "./plugins/Webly-AI/webly-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Publish a website or share files and folders from Codex at a live URL in seconds with no account, through the bundled Webly skill and remote MCP server, then let the person claim it, edit it over MCP, and publish drafts they approve.",
+      "icon": "./plugins/Webly-AI/webly-plugin/assets/logo.svg"
     },
     {
       "name": "x-skills",

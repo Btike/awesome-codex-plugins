@@ -34,7 +34,7 @@ before work resumes. The skill bundles `ue.py`, so nothing else needs installing
 | Claude Code | `claude plugin marketplace add noamshorts22-prog/usage-engineer` then `claude plugin install usage-engineer@usage-engineer` |
 | Any agent (Cursor, Gemini CLI, OpenCode, ...) | `npx skills add noamshorts22-prog/usage-engineer` |
 
-The skill itself is [skills/usage-engineer/SKILL.md](skills/usage-engineer/SKILL.md).
+The skill itself is [skills/usage-engineer/SKILL.md](https://github.com/noamshorts22-prog/usage-engineer/blob/main/skills/usage-engineer/SKILL.md).
 
 ## Two minutes to your first numbers
 
@@ -124,7 +124,7 @@ State lives in `~/.usage-engineer` (override with `UE_STATE_DIR`).
 - A GitHub Action that posts `ue audit` waste signals on agent-authored PRs
 - More benchmark cases, contributed by the community
 
-Contributions welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions welcome: see [CONTRIBUTING.md](https://github.com/noamshorts22-prog/usage-engineer/blob/main/CONTRIBUTING.md).
 
 ## License
 

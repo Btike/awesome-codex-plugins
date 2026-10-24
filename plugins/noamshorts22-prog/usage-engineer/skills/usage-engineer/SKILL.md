@@ -5,7 +5,7 @@ license: MIT
 compatibility: Needs Python 3.9+. Usage audit reads local Codex CLI, Claude Code and OpenCode data; the other commands work in any agent.
 metadata:
   author: noamshorts22-prog
-  version: "0.3.1"
+  version: "0.3.2"
   homepage: https://github.com/noamshorts22-prog/usage-engineer
 ---
 
