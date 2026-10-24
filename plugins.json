@@ -3,7 +3,7 @@
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
   "last_updated": "2026-10-24",
-  "total": 331,
+  "total": 332,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -1338,6 +1338,16 @@
       "category": "Development & Workflow",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/liuyewang/skill-sync-publisher/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "Sno Station Skills",
+      "url": "https://github.com/sno-ai/sno-station-skills",
+      "owner": "sno-ai",
+      "repo": "sno-station-skills",
+      "description": "Peer review, delegation, handoff and self-improvement skills that give Codex and Claude Code the working habits of a real team.",
+      "category": "Development & Workflow",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/sno-ai/sno-station-skills/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Spec-Driven Development",

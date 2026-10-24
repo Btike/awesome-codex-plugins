@@ -1977,6 +1977,20 @@
       "icon": "./plugins/liuyewang/skill-sync-publisher/assets/skill-sync-publisher.svg"
     },
     {
+      "name": "sno-station",
+      "displayName": "Sno Station Skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/sno-ai/sno-station-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Peer review, delegation, handoff and self-improvement skills that give Codex and Claude Code the working habits of a real team."
+    },
+    {
       "name": "spec-driven",
       "displayName": "Spec-Driven Development",
       "source": {
