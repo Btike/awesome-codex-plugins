@@ -1994,6 +1994,21 @@
       "icon": "./plugins/yyykf/spellbook-skills/assets/icon.svg"
     },
     {
+      "name": "stacked-prs",
+      "displayName": "stacked-prs",
+      "source": {
+        "source": "local",
+        "path": "./plugins/Qabbout/stacked-prs-skill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Agent skill for Claude Code and Codex to split large changes into reviewable PRs, carry fixes through dependent branches, and land them in dependency order with automated Git checks.",
+      "icon": "./plugins/Qabbout/stacked-prs-skill/assets/icon.svg"
+    },
+    {
       "name": "staff-engineer-mode",
       "displayName": "Staff Engineer Mode",
       "source": {

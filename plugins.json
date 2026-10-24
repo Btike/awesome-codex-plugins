@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
-  "last_updated": "2026-10-23",
-  "total": 323,
+  "last_updated": "2026-10-24",
+  "total": 324,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -1348,6 +1348,16 @@
       "category": "Development & Workflow",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/yyykf/spellbook-skills/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "stacked-prs",
+      "url": "https://github.com/Qabbout/stacked-prs-skill",
+      "owner": "Qabbout",
+      "repo": "stacked-prs-skill",
+      "description": "Agent skill for Claude Code and Codex to split large changes into reviewable PRs, carry fixes through dependent branches, and land them in dependency order with automated Git checks.",
+      "category": "Development & Workflow",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/Qabbout/stacked-prs-skill/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Staff Engineer Mode",
