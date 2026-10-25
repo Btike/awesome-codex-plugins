@@ -3605,6 +3605,21 @@
       "icon": "./plugins/avivsinai/jenkins-cli/assets/jk-icon.svg"
     },
     {
+      "name": "jetformat",
+      "displayName": "Jetformat",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jetformat/jetformat-agent"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Converts Word, Excel, and PowerPoint to PDF, PDF to Word, extracts text, and merges, extracts, or renders PDFs through the locally installed Jetformat CLI.",
+      "icon": "./plugins/jetformat/jetformat-agent/assets/logo.png"
+    },
+    {
       "name": "jev-social",
       "displayName": "Jev Social",
       "source": {

@@ -3,7 +3,7 @@
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
   "last_updated": "2026-10-25",
-  "total": 335,
+  "total": 336,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -2439,6 +2439,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/avivsinai/jenkins-cli/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "Jetformat",
+      "url": "https://github.com/jetformat/jetformat-agent",
+      "owner": "jetformat",
+      "repo": "jetformat-agent",
+      "description": "Converts Word, Excel, and PowerPoint to PDF, PDF to Word, extracts text, and merges, extracts, or renders PDFs through the locally installed Jetformat CLI.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/jetformat/jetformat-agent/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Jev Social",
