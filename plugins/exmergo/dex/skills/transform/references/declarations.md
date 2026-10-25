@@ -84,13 +84,67 @@ Refused, with the fix named:
 - an unknown `role`, `additivity` or `evidence`, or an unknown field;
 - a population filter listing values on a column that looks like personal data.
 
-Warned, never refused: a missing description, grain, assumptions or column role,
-an assumption missing its decision, chosen value or evidence, and a model the
-plan writes SQL for with no declaration at all.
+Warned, never refused: a missing description, grain, population, assumptions or
+column role (one warning per missing field), a measure without its aggregation,
+additivity or unit, an assumption missing its decision, chosen value or evidence,
+and a model the plan writes SQL for with no declaration at all. Where the SQL
+already implies the decision, the warning names it: `fct_orders declares no
+population rule; its SQL filters on status`.
 
 A plan carrying declarations or `schema_yml` edits is parsed by dbt against a
 throwaway copy of the post-change project before it is stored, and degrades to a
 named warning where dbt is not installed.
+
+## `data.declarations`: drafted, declared, missing
+
+For every model a plan creates, edits or declares, the plan envelope carries
+`data.declarations.<model>` with three parts. It is computed from the `.dex/`
+cache and the post-change repository only, so it scans nothing and costs nothing
+on any connector.
+
+```json
+{"drafted": {
+   "grain": {"value": ["order_id"],
+             "evidence": "order_id is a proven unique key of raw_orders, carried through unchanged"},
+   "columns": {
+     "customer_id": {"from": "raw_orders.customer_id",
+                     "role": {"value": "foreign_key", "evidence": "the join ... was verified, no orphans"},
+                     "references": {"value": "customers.customer_id", "evidence": "..."},
+                     "nullable": {"value": false, "evidence": "..."}},
+     "region": {"from": "customers.region",
+                "nullable": {"value": true, "evidence": "it comes from the outer side of the left join ..."}},
+     "discount_rate": {"from": "raw_orders.discount_rate",
+                       "unit": {"value": "fraction", "evidence": "... a hypothesis about the unit, not a certified one"}}},
+   "domains": [{"column": "raw_orders.status", "used_in": ["where"],
+                "values": ["shipped", "cancelled"], "elided": 0, "complete": true}],
+   "inputs": [{"relation": "raw_orders", "profiled": true, "identifier": "shop.main.raw_orders"}],
+   "incomplete": []},
+ "declared": {"description": "...", "grain": ["order_id"], "population": {...}, "columns": {...}},
+ "missing": ["assumptions", "columns.amount.unit"]}
+```
+
+`drafted` is never written into the project. Each fact carries the `evidence` it
+rests on, and a fact the cache cannot support is left out rather than guessed:
+
+| Drafted | When |
+|---|---|
+| `grain` | the `GROUP BY` keys when the model aggregates; otherwise a key the driving relation's profile *proved* unique, selected unchanged, with every join an equality on a key proven unique on its joined side. Any other join, a right or full join, a set operation or an `UNNEST` gives `{"value": null, "withheld": "<why>"}` |
+| `columns.<c>.from` | the upstream `relation.column` a column passes through from unchanged, followed through CTEs |
+| `columns.<c>.role` | `key` for a single-column drafted grain; `foreign_key`, with `references`, for a column carrying a join `explore relationships --verify` measured with no orphans. A join measured with orphans would fail the `relationships` test a `references` renders, so it is `references: {"value": null, "withheld": "<the orphan rate>"}` instead |
+| `columns.<c>.pii` | the upstream column's PII flag, category and confidence |
+| `columns.<c>.nullable` | `true` on the outer side of a left, right or full join whatever the upstream NULL rate; otherwise from the upstream NULL fraction |
+| `columns.<c>.additivity` | `semi_additive` where `explore profile --check-cumulative` found the upstream column never decreasing |
+| `columns.<c>.unit` | `fraction` for a non-integer column profiled entirely in 0 to 1; `percent` for one named like a percentage profiled in 0 to 100. A hypothesis, never a certified unit |
+| `domains` | the cached value domain of each column the SQL filters (`where`, `having`, `qualify`) or branches on (`case`), capped by `profile_value_domain_cap` with the rest counted in `elided`. A PII-flagged column's values are never drafted: `values` is null and `withheld` says why |
+| `inputs` | every relation the SQL reads; one the cache has not profiled is `profiled: false` with the `command` that would profile it |
+| `incomplete` | why part of the SQL was not read: a macro or jinja block, a set operation, an unqualified column in a multi-relation select |
+
+`declared` is what the model's YAML entry says once the plan lands: this
+payload's declaration merged over whatever the entry already carried. `missing`
+names each intent field nobody has supplied (`description`, `grain`,
+`population`, `assumptions`, `columns.<c>.role`, and a measure's `aggregation`,
+`additivity` and `unit`), and each is also a warning. Where the drafted grain and
+the declared one disagree, a warning says so.
 
 ## `data.decisions`
 

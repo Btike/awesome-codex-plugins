@@ -33,6 +33,10 @@ Each line came from a real rejection or acceptance on a launch-film project.
 - [ ] Never stack 5 languages in one block of text.
 - [ ] Translations flagged for native-speaker review.
 
+## Objects (when the product's UI is built from real things)
+- [ ] Props and transitions are the product's own real objects doing what they really do (pegged print swings, stamp comes down, film strip pulls); no generic MG device where an object would do.
+- [ ] ≤3 kinds of object per shot; one object per job; drawn in the brand's line, not 3D skeuomorphic.
+
 ## Delivery
 - [ ] Audio runs full length in the MP4.
 - [ ] Contact sheet checked; obvious bugs (off-screen elements, backwards text, seams, overlaps) fixed.

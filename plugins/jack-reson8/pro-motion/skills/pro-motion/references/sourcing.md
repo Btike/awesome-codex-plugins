@@ -5,7 +5,7 @@
 1. **Find the official upload** with web search restricted to youtube.com:
    `youtube <title> official trailer OR opening OR "textless OP"` — textless OP/ED versions are best (no credits over the art).
 2. **Download low-res and tile 24 frames** (no browser needed, no permission prompts):
-   `bash tools/ref_frames.sh <url> <name> 24` → `<name>_sheet.jpg` (6×4 across the whole clip). Look at it with the image viewer.
+   from `refs/`: `bash ../tools/ref_frames.sh <url> <name> 24` → `refs/<name>_sheet.jpg` (6×4 across the whole clip). Look at it with the image viewer.
 3. For a moment you care about, grab dense frames: `$FF -ss 31 -t 3 -i name.mp4 -vf "fps=8,scale=-2:300,tile=8x3" -frames:v 1 dense.jpg` — transitions and timing only show up at 8+ fps.
 4. Motion-design / UI motion: 60fps.design pages contain direct mp4 links; copy the .mp4 URL yourself and pass it to ref_frames.sh (the script no longer scrapes pages). Impractical (impractical.ai/launch-videos) has written breakdowns.
 5. Category look: App Store screenshots of competitors; Behance project images can be listed from an already-open browser tab via `javascript_tool` (curl is blocked), then downloaded from the CDN.
@@ -13,6 +13,7 @@
 ## Blocked / painful
 - The in-app browser asks the user to allow every new site and YouTube may be refused → prefer yt-dlp in the shell.
 - Vimeo now requires login for yt-dlp; look for a YouTube mirror.
+- YouTube can block yt-dlp with a bot check, and most brand Vimeo embeds are domain-locked (401). Don't spoof a referer; take the direct mp4 the brand serves on its own site or CDN (open the page source, look for `.mp4`) — in practice that is where most launch films come from.
 - Behance/YouTube pages block curl; their CDNs (mir-s3-cdn-cf.behance.net, i.ytimg.com) don't.
 
 ## A wider pool for "strongly stylized" (pick across countries and media)

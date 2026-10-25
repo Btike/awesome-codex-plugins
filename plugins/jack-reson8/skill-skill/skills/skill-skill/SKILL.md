@@ -12,6 +12,7 @@ For heavy benchmarking (many evals, variance, description optimisation loops) us
 ## 1 · Distil from the real work
 
 Mine the conversation (or the user's notes) before writing anything:
+- **Across many sessions:** `python3 <this skill's base directory>/scripts/mine_corrections.py --days 30` ranks the user's repeated corrections by how many sessions they recur in, with dated quotes. A recurring theme no skill covers is a candidate skill.
 - **Corrections and rejections** in the user's own words ("太 PPT", "越改越不好", "too EDM"). Each becomes a rule with its reason, or a check.
 - **Accepted outputs**: what finally worked and *why* (the mechanism, not the adjectives).
 - **Repeated work**: anything done by hand twice (a conversion, a check, a render) becomes a script in `scripts/`.
@@ -60,6 +61,7 @@ Flags: bad name / folder mismatch, description too long or without a trigger cla
 ## 6 · Keep it alive
 
 - Every new rejection / acceptance → one line in `lessons.md` and, if it recurs, a check or a gate.
+- Rerun `mine_corrections.py` now and then. A theme that a skill already covers but still recurs means that skill is advice, not a gate: turn its rule into a required artifact or a script.
 - After an edit, rerun the audit; show the user the diff summary, not the whole file.
 - Prune what never fires in effect tests. Rename only with the collision check; update every path in SKILL.md.
 
@@ -68,3 +70,4 @@ Flags: bad name / folder mismatch, description too long or without a trigger cla
 1. **Gate:** `python3 <this skill's base directory>/scripts/publish_check.py <repo> --scan` must print READY (strict YAML frontmatter, LICENSE + SECURITY.md at the root and in each plugin folder, manifests that agree, no token-like strings in data, scanner score ≥ 80). Fix every ✗ before any PR.
 2. Set the repo up for every agent and keep one copy (`references/publishing.md` → "One skill, every agent", "Keep one copy", "Descriptions in the users' languages"). Then read each target list's CONTRIBUTING, PR template and `.github/workflows` (bots enforce order, file scope, scores). One open PR per list; append further skills to it.
 3. After submitting, run `scripts/pr_triage.py` instead of reading notification mail: fix every ACTION item, hand YOU items to the account owner as one list, and ignore WAIT. Add any new bot failure to `publishing.md` as a row.
+4. Listing PRs alone bring index bots, not people. Plan reach from `publishing.md` → "Exposure": a data post the owner publishes, the checker badge, fix-type PRs, a series collection repo. Posting publicly is always the owner's call.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+exec </dev/null  # keep ffmpeg/yt-dlp from reading the terminal
 # usage: ref_frames.sh <url> <name> [frames=24]
 # Downloads a low-res copy of a reference video the user named and writes NAME_sheet.jpg (6×4 frames across the clip).
 # <url> is a video page (YouTube / Vimeo-public, fetched with yt-dlp) or a direct .mp4/.webm file URL.
@@ -30,9 +31,9 @@ ytdlp() {
 
 case "$URL" in
   *.mp4|*.webm|*.mp4\?*|*.webm\?*) curl -fsSL "$URL" -o "$NAME.mp4" ;;
-  *) "$(ytdlp)" -q --no-warnings --no-playlist -f "bv*[height<=480][ext=mp4]/b[height<=480]/worst" -o "$NAME.%(ext)s" "$URL"
+  *) "$(ytdlp)" -q --no-warnings --no-playlist -f "bv*[height<=480][vcodec^=avc1]/b[height<=480][vcodec^=avc1]/bv*[height<=480][ext=mp4]/b[height<=480]/worst" -o "$NAME.%(ext)s" "$URL"
      [ -f "$NAME.mp4" ] || mv "$NAME".* "$NAME.mp4" 2>/dev/null || true ;;
 esac
-DUR=$("$FF" -i "$NAME.mp4" 2>&1 | grep -oE "Duration: [0-9:.]+" | cut -d' ' -f2 | awk -F: '{print $1*3600+$2*60+$3}')
-"$FF" -loglevel error -y -i "$NAME.mp4" -vf "fps=$N/$DUR,scale=-2:300,tile=6x$(( (N + 5) / 6 ))" -frames:v 1 "${NAME}_sheet.jpg"
+DUR=$( { "$FF" -i "$NAME.mp4" 2>&1 || true; } | grep -oE "Duration: [0-9:.]+" | cut -d' ' -f2 | awk -F: '{print $1*3600+$2*60+$3}')
+"$FF" -loglevel error -y -i "$NAME.mp4" -vf "fps=$N/$DUR,scale=-2:300,tile=6x$(( (N + 5) / 6 ))" -frames:v 1 -update 1 "${NAME}_sheet.jpg"
 echo "wrote ${NAME}_sheet.jpg ($DUR s)"

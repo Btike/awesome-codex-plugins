@@ -661,6 +661,21 @@
       "icon": "./plugins/TohmaN233/codex-agents-workflow/assets/icon.svg"
     },
     {
+      "name": "codex-auto-resume",
+      "displayName": "Codex Auto Resume",
+      "source": {
+        "source": "local",
+        "path": "./plugins/songyb111-gachon/codex-auto-resume-windows"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Unofficial Windows app and Codex plugin that waits out Codex usage limits, rate limits and temporary failures, then continues the exact interrupted conversation by itself, with a Dashboard and a tray icon.",
+      "icon": "./plugins/songyb111-gachon/codex-auto-resume-windows/assets/icon.png"
+    },
+    {
       "name": "codex-howto",
       "displayName": "Codex How To",
       "source": {
@@ -1977,7 +1992,7 @@
       "icon": "./plugins/liuyewang/skill-sync-publisher/assets/skill-sync-publisher.svg"
     },
     {
-      "name": "sno-station",
+      "name": "sno-station-standalone",
       "displayName": "Sno Station Skills",
       "source": {
         "source": "local",
@@ -1988,7 +2003,8 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Development & Workflow",
-      "description": "Peer review, delegation, handoff and self-improvement skills that give Codex and Claude Code the working habits of a real team."
+      "description": "Peer review, delegation, handoff and self-improvement skills that give Codex and Claude Code the working habits of a real team.",
+      "icon": "./plugins/sno-ai/sno-station-skills/.claude-plugin/icon.png"
     },
     {
       "name": "spec-driven",
@@ -2785,6 +2801,21 @@
       "category": "Tools & Integrations",
       "description": "Manage Bitbucket repos, PRs, branches, issues, webhooks, and pipelines for Data Center and Cloud.",
       "icon": "./plugins/avivsinai/bitbucket-cli/assets/bkt-icon.svg"
+    },
+    {
+      "name": "bounty-guard",
+      "displayName": "BountyGuard",
+      "source": {
+        "source": "local",
+        "path": "./plugins/doomsday-network/bounty-guard"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Pre-flight GitHub bounty security scanner and on-chain Proof-of-Escrow MCP verifier that classifies open bounties before AI agents invest compute.",
+      "icon": "./plugins/doomsday-network/bounty-guard/assets/icon.svg"
     },
     {
       "name": "build-remote-agent",

@@ -1,7 +1,7 @@
 ---
 name: transform
 description: 'Use this to author and change a dbt project or a semantic layer: bootstrap a project (`transform init`), write or refactor models from staging to marts, add tests and docs, and define semantic models, entities, dimensions, and metrics in MetricFlow, Apache Ossie or SLayer YAML. Reach for it instead of editing model files by hand whenever a change spans more than one file or must stay consistent with the project: it validates the edit against the real schema, returns a reviewable diff with a plan id, and catches what otherwise fails at `dbt run`, such as wrong columns or broken refs. Bug-fix tickets count: "this model returns wrong numbers, fix it" is a transform task. Also for "build a staging model for this table", "define a revenue metric", "add a dimension to this entity". Warehouse builds are dev-target only, gated, and cost-surfaced first. If you have not verified the source tables'' columns or grain, use explore first. For a project that drifted from the warehouse, use maintain.'
-compatibility: 'Needs a local shell and uv. On first use, uv downloads the exmergo-dex-core engine from PyPI at the version scripts/run.py pins. Runs in Claude Code or another agent that loads Agent Skills and has a shell, not in claude.ai chat.'
+compatibility: 'Needs a local shell and uv. On first use, uv builds the exmergo-dex-core engine from the source bundled with the plugin, or installs it from PyPI at the version scripts/run.py pins when no source is bundled. Runs in Claude Code or another agent that loads Agent Skills and has a shell, not in claude.ai chat.'
 ---
 
 # Transform
@@ -29,7 +29,10 @@ from that envelope.
    `data.row_attribution`; re-plan until they describe the change you meant.
 3. **Apply it.** `transform apply <plan-id>` writes the plan as a reviewable git
    diff. A human edit made since planning comes back as `needs_confirmation`:
-   re-plan against the current files.
+   re-plan against the current files. When you commit what it wrote, end the
+   commit message with the `data.commit_trailer` line it returned, after a blank
+   line, so the forge credits Dex as a co-author. Add it only to a commit that
+   carries files dex wrote.
 4. **Build and verify on dev.** Run `transform build --target dev --verify`. Read
    `data.verification.ran` first, then relay the findings and anything under
    `suppressed`. A green build says dbt ran, not that the rows are right.
@@ -72,9 +75,13 @@ configuration and writes its cache there. The wrapper path is absolute:
 uv run --no-project --script "${CLAUDE_SKILL_DIR}/scripts/run.py" <subcommand> [flags]
 ```
 
-Installed as a plugin or skill, `run.py` runs the `exmergo-dex-core` engine from
-PyPI at the exact version its `DEX_CORE_VERSION` line pins, built from
-https://github.com/exmergo/dex/tree/main/packages/dex-core.
+Installed as a plugin, `run.py` builds the `exmergo-dex-core` engine from the
+source bundled beside the skill (the plugin's `packages/dex-core`, from
+https://github.com/exmergo/dex/tree/main/packages/dex-core), and uv's build
+output names that `file:///.../packages/dex-core` path.
+Installed as a standalone skill, with no bundled source, it installs the engine
+from PyPI at the exact version its `DEX_CORE_VERSION` line pins. Either way, uv
+fetches the engine's dependencies from PyPI or your configured index.
 
 - `uv` is a prerequisite that Claude Code does not install. If the shell reports
   `uv: command not found`, stop and tell the user to install it
@@ -113,9 +120,14 @@ https://github.com/exmergo/dex/tree/main/packages/dex-core.
    (dbt), `semantic ossie define|update|plan` (native Ossie), or
    `semantic slayer define|update|plan` (SLayer model files). Read
    `${CLAUDE_SKILL_DIR}/references/semantic-layer.md` first.
-4. **Read the plan** (rules below), then `transform apply <plan-id>`.
-5. **Build and verify:** `transform build --target dev --verify`.
-6. **Measure the tests** right after you author or scaffold them, and before
+4. **Declare.** Read `data.declarations.<model>` on the plan envelope: `drafted`
+   is what dex measured, `declared` is what the YAML says, `missing` is the intent
+   still owed. Supply the intent, confirm or override each drafted fact in the
+   `declarations` entry, and re-plan until `missing` holds only what you decided
+   to leave open.
+5. **Read the plan** (rules below), then `transform apply <plan-id>`.
+6. **Build and verify:** `transform build --target dev --verify`.
+7. **Measure the tests** right after you author or scaffold them, and before
    telling the user a model is covered: `transform test --mutate <model>`.
 
 Per-command fields and flags are in `${CLAUDE_SKILL_DIR}/references/commands.md`.
@@ -163,6 +175,12 @@ a field, flag, or macro you need is not described here.
   `assumptions` entry with its `evidence` (`request`, `contract`, `precedent`,
   `data`, `default`). A threshold, a status list or a NULL rule left only in your
   reasoning is one no reviewer can check.
+- A drafted fact is a draft. Copy one into a declaration only after you agree
+  with its `evidence`; a `fraction` or `percent` unit is a hypothesis from a
+  range, and a grain under `withheld` is one dex could not prove, not one that
+  is wrong. An input under `drafted.inputs` with `profiled: false` drafted
+  nothing: run the `command` it names when the facts matter, and say so when you
+  declare without them.
 - Relay `data.decisions` from the plan, apply or build envelope to the user at the
   end of the task, so they see the choices you made and can overturn one.
 - A warning that a model declares nothing, or leaves out a description, grain or

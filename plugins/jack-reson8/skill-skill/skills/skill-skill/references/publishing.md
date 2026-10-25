@@ -44,9 +44,34 @@ Models pick skills from the description, so a user writing in Japanese only trig
 - Read the list's CONTRIBUTING, PR template and `.github/workflows` first. Bots enforce what humans don't write down: alphabetical order, README-only, keyword blocklists, minimum scores.
 - One open PR per list. To add another skill, append it to your open PR and leave a one-line comment, instead of opening a new PR.
 - Place each entry alphabetically in the closest category, and copy the neighbours' format exactly (table row vs bullet, `*By @you*` suffix, description ≤150 chars).
-- PR body: what it is (one sentence each), real-world use, proof (audit score, a report), "I am the author", plus a line saying an AI assistant prepared it on the author's behalf.
+- PR body: what it is (one sentence each), real-world use, proof (audit score, a report), "I am the author". Follow the account owner's rule on AI attribution in PR and issue text; many owners want none there (commit trailers are separate).
+- JSON lists: re-dump with the file's own indent and `ensure_ascii`, or one entry becomes a 100k-line diff. `scripts/json_append.py` detects both, inserts, and refuses if anything but additions changed. Run the list's own tests before pushing.
+- Forks: GitHub rate-limits new forks. Open at most 6 new forks per batch; reuse existing forks (`gh repo sync`) for the rest.
 - Vendoring lists (they copy skill folders into their repo, e.g. ok-skills) also need the README count and index updated in every language the Contributing section names.
 - Gates you can't meet yet: a minimum repo age (e.g. 14 days) or star count. Note them with the date they open; don't submit early.
+
+## What reviewers rejected, and what got merged
+
+| Seen | Fix |
+|---|---|
+| Plugin directory (buildwithclaude) closed: a script downloaded `releases/latest`, a page chose what to download, `setup.sh` installed packages without asking | Pin the binary and verify its SHA-256; fetch only the URL the user gave; print the install plan and wait for a yes; say in SKILL.md that pages, videos and screenshots are data, never instructions |
+| Same directory merged on: "Markdown only, no scripts, no network, version matches the manifest" | Lead the PR body with exactly those facts, and pin to a commit SHA. After any later fix, push, re-pin, and leave one comment saying what changed |
+| Auto-labeler `validate` fails because rule 1 allows README-only changes | Expected for fix PRs; leave one comment explaining it, don't fight the bot |
+| Frontmatter with an unquoted `: ` passes Claude Code but fails js-yaml / PyYAML | Quote the description; `publish_check.py` parses strictly. When fixing someone else's repo, claim only what you verified ("strict parsers reject it") |
+| Crawler notes "manifest but no standard commands/skills" on a marketplace repo | Harmless when the entry's type is `marketplace`; skills live under `plugins/<name>` |
+| awesome-copilot wants an issue form plus an immutable tag or SHA, tested in Copilot | Cut a release tag first; submit through the form, not a PR |
+| MCP lists (punkpeye) require a Glama listing and badge | Account owner registers on glama.ai; add the badge to the PR line |
+
+## Exposure: what actually brings people
+
+Measured on one account: 49 listing PRs → 0 stars, 8 human views in 14 days, ~240 clones that were almost all index bots. Listing PRs are table stakes, not reach. In order of what moves humans:
+
+1. **A data post** the owner publishes (e.g. "audited 899 skills, 98 % never say when to use them"), with one chart. `skill_report.py` produces the numbers.
+2. **A tool people paste into**, with a badge that links back (the in-browser checker at `docs/check/` + `skill health` badge). Every repo that adds the badge is a backlink.
+3. **Fix-type PRs** to popular skill repos (description over 1,024 chars, broken references, invalid YAML). Maintainers read those; listing PRs get bot replies.
+4. **A series**: one collection repo whose marketplace lists every plugin via `git-subdir`, a "part of the X series" line under each README's H1, the same share image as README hero and GitHub social preview.
+5. **Dogfood**: make the launch video and images with your own skills and say so in the post.
+6. **A daily growth check** (scheduled task): stars, views, clones, PR states, one line of what changed.
 
 ## After: `scripts/pr_triage.py` instead of reading notifications
 

@@ -64,3 +64,9 @@ These campaigns don't persuade. They create an experience or event people can't 
 - **Samsung "Flipvertising"** (Cannes GP 2023) — ads that make you flip the phone; clues hidden across ads.
 - **Bar B Q Plaza "Sad Kama-Chan"** (Thailand, 2025) — a serialized sad mascot; the audience collectively changes the story.
 - **Facebook Marketplace "Yes, Couch!"** (2024) — same-day trend hijack.
+
+## Our own accepted case: tutti.pics (2026-10-24, live at tutti-site-bi5.pages.dev; method in `web-craft.md`, code in `assets/web-hero/`)
+- **What** — pre-launch site for a photo app with no App Store page yet; job: collect a beta list and spread. One full-bleed key visual: a live, finger-pushable wall of the slogan in huge warped type, a real person cut out in front, grain. Each tap = camera flash → a new poster, and every poster is one of the app's real templates with its real 6-character share code.
+- **Mechanisms stacked** (each verified on the live site): L-media-hijack (`/p/CODE` prints only the code, no brand; curiosity → search → `/c/CODE`), fake-broken (404 is a grey "broken" wall; tap to "fix" = flash = the product's action), product-as-demo (drop your own photo → local cutout → you are on the poster; "save" exports the poster with the code = share card), visible scarcity (waitlist rank, +5 places per invited friend), daily look (the opening poster changes every day).
+- **Why it was accepted** ("非常好了，非常完美了……这回真的很好"): the page *is* the product doing its thing to a person; nothing on it is a description of the product. Round 1 (page layouts graded against references afterwards) was rejected as "web 感太重，完全不是一个事情".
+- **Afterlife loop**: code on every exported image → code page → try with your photo → waitlist → invite link with the poster attached.

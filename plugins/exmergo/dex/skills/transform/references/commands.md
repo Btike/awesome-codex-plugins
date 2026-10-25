@@ -18,6 +18,10 @@ of or on top of hand-authored edits.
   plus `--confirm --budget`. `attributed: false` carries the reason (macro SQL, a
   jinja conditional, a renamed CTE, an unprofiled parent). Advisory: nothing here
   refuses a plan.
+- `data.declarations.<model>`: for every model the plan creates, edits or
+  declares, `drafted`, `declared` and `missing`. Free on every connector: it reads
+  the `.dex/` cache and the repository and opens no connection. Shape in
+  `declarations.md`. Absent when the plan touches no model.
 - Shape warnings: the authored SELECT list against the columns `schema.yml`
   declares, in both directions, silent where the model declares none.
 - The resolved-key convention: a model exposing a raw foreign key where at least
@@ -32,6 +36,13 @@ of or on top of hand-authored edits.
 when no id is given. If a human edited a file after planning, nothing is written
 and the divergence comes back as diffs with `needs_confirmation`. `plans` lists
 stored plans, pending and applied, newest first.
+
+An apply that wrote at least one file returns `data.commit_trailer`, the line
+`Co-authored-by: Dex <dex@exmergo.com>`. End the message of the commit that
+carries those files with it, after a blank line: the forge credits Dex as a
+co-author through it. An apply that wrote nothing, or stopped at
+`needs_confirmation`, returns no trailer, because there is nothing of dex's to
+commit.
 
 ## `transform references <name> [more...] [--kind <k>] [--full]`
 
