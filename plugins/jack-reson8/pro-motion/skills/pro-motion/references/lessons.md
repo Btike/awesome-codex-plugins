@@ -74,3 +74,6 @@ Accepted the same night (2026-10-25): "非常好了，非常完美了……这�
 ## Matching a reference one-to-one = copying (2026-10-25, Copy That style frames round 2)
 Rejected: "b 直接变成抄了 配色都不改 没有创意结合的部分". Each direction had been built from exactly one reference, palette included (Spotify's violet + mint), so the frame read as a copy, however faithful.
 Rule: copying is allowed only inside the technique sheet. A direction fuses **≥ 2 references** (take a device from each), and the palette, the core idea and the use of real material must be your own, tied to the brand. The comparison page has three columns per reference: what was taken · how it was changed · where it still falls short. Accepted next: "On Air" (tally red / bone / ink), row weight = the track's level meter, layer sandwich from the tutti.pics hero.
+
+## Fonts must be local before a parallel render (2026-10-25, Copy That film)
+Stills rendered fine, but the full parallel render died twice with "Navigation timeout of 30000 ms": every tab fetched Google Fonts over a slow network. Download the faces into the project (`fonts.css` + files; for CJK use an installed variable font or a `&text=` subset) and link them locally before `render-fast.js`.

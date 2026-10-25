@@ -76,3 +76,6 @@ Every `-vs-ref` entry gets a `Core gap:` line. If any "where it falls short" lin
 - `wrangler` OAuth tokens expire: `whoami` can still print the account while API calls fail with code 10000; run `wrangler login` and let the user click Allow.
 
 Sync to pro-launch after editing: `cp ~/.claude/skills/pro-motion/references/web-craft.md ~/.claude/skills/pro-launch/references/06c-web-craft.md`
+
+## W7 · Pre-launch pages are growth machines (2026-10-25)
+Before choosing the below-the-fold structure, map it to AARRR and pick the one where each interaction *produces* the next growth step (Tutti v3 X: tap/hold/swipe = activation, each yields a poster with a code = share asset, the last gesture "give it to a friend" = referral into the waitlist). Mechanisms with evidence (research: Tutti `docs/site/refs-prelaunch-growth-2026-10-25.md`): referral counts only after the invitee completes the core action (anti-fraud; Robinhood/Superhuman pattern), visible live position + tiered rewards (3/10 invites), spoiler-free result grid next to the share code (Wordle), daily "today's look" for return visits, App Store pre-order + LINE official-account reservation per market, staged code release with old waitlist first. Every interaction needs a tap fallback (drag failed in testing; "tap the friend card" also works).

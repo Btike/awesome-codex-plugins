@@ -38,11 +38,18 @@ Copy `assets/template/audio-plan.md` into the project (setup does this for new f
 
 ## 2 · Analyse the music (the edit is the music)
 
+Get the real audio first: the user's file, or a **public** video/MP4 carrier of the track (Suno's public share pages expose one). Never decrypt a protected stream (Suno `media_urls` with `encoding=1.0.0`); ask for a normal download instead.
+
 ```bash
 $FF -y -i music.mp3 -ac 1 -ar 22050 music/mono.wav
 python3 tools/analyze_music.py music/mono.wav music/   # tempo, grid offset, onsets, low/high hits, RMS → music/analysis.json + music/spec.png
+python3 <this skill's base directory>/scripts/music_events.py music/mono.wav music/   # the edit list → music/events.json
 ```
-Look at `spec.png` (spectrogram, envelope, beat grid). Write the **music map**: lead-in, stabs, builds, the drop, held / half-time sections, silences, the biggest hit, the final hit, the tail — in seconds. A user's description of the track ("drop at 0s, logo at 25s") is a hint; the spectrogram is the truth. Every major move lands on a mapped event; secondary moves on 8ths / 16ths (`grid0 + k * 60 / BPM / 4`).
+Two layers, both required before a shot map:
+- **Edit list** (`music_events.py`): kick / snare / hat / bass onsets per band, tonal stabs (horns), beeps, section boundaries by spectral novelty, a beat grid from hat/kick intervals with half/double-time candidates, and a 30 fps level envelope for level-driven motion. A section with no kick is a different scene from one with kicks; a v1 was rejected for cutting a kickless half-time like any other section.
+- **Evidence report** (when comparing takes or writing the next prompt): use the `audio-reference-analyzer` skill if installed (FFmpeg + librosa + optional CLAP): LUFS and true peak, tempo with half/double check, key candidates (correlation, not probability), 500 ms energy curve, level-matched comparison WAVs, CLAP timbre candidates per 10 s window, and a "prompt asked for / audio supports?" table. Don't call the louder take better.
+
+Write the **music map** from both: lead-in, stabs, builds, the drop, kickless sections, silences, the brand moments (shout, sonic logo), the biggest hit, the tail — in seconds, each with the method that found it. Shouts, lyrics and melody are confirmed by ear or ASR, never inferred from a band ratio. A user's description of the track is a hint; the audio is the truth. Every major move lands on a mapped event; secondary moves on 8ths / 16ths.
 
 ## 3 · Research with real frames (never from memory)
 
@@ -100,7 +107,7 @@ Take feedback as "time → problem", fix only that, re-render (seconds, not minu
 
 ## Files
 
-- `scripts/` — `setup.sh`, `analyze_music.py`, `audio_post.py`, `render-fast.js`, `contact_sheet.sh`, `ref_frames.sh`, `refs_gate.py`, `cutout.swift`, `faces.swift`, `web_layers.js` (decode a reference site's layers), `web_scroll.js` (scroll contact sheet + video of any page or prototype), `web_gate.py` (web order gate)
+- `scripts/` — `setup.sh`, `analyze_music.py`, `audio_post.py`, `render-fast.js`, `contact_sheet.sh`, `ref_frames.sh`, `refs_gate.py`, `music_events.py`, `cutout.swift`, `faces.swift`, `web_layers.js` (decode a reference site's layers), `web_scroll.js` (scroll contact sheet + video of any page or prototype), `web_gate.py` (web order gate)
 - `assets/template/` — `campaign.md`, `audio-plan.md`, `film.html`, `film.js` (8-second runnable demo), `motion-lib.js`, `fx-demo.html` + `fx-demo.js` (one second per effect), OFL handwriting fonts
 - `assets/web-hero/` — the accepted tutti.pics engine: `src/index.html` + `src/strings.json` template, `public/hero.js` (WebGL type wall, looks, flash, code/poster/404 pages), `try.js` (local segmentation), `join.js` + `functions/` + `schema.sql` (waitlist on Pages + D1), `tools/build.js` (i18n pages + font subsets), `tools/og.js` (share cards)
 - `references/` — `creative-process.md` (how ideas are found: eight moves + tests), `brand-system.md` (coherent brand: core, tokens, touchpoint matrix, order), `web-craft.md` (web order, recipe, pitfalls), `unconventional-marketing.md`, `campaign-cases.md`, `audio-first.md`, `vfx-techniques.md`, `sourcing.md`, `research-notes.md`, `aesthetic-checklist.md`, `lessons.md`

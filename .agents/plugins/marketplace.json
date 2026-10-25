@@ -2567,6 +2567,21 @@
       "icon": "./plugins/Sandyzzx/codex-zcode-bridge/assets/icon.png"
     },
     {
+      "name": "call-me",
+      "displayName": "/call-me",
+      "source": {
+        "source": "local",
+        "path": "./plugins/radres/call-me"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Lets Codex agents ring or text your iPhone through a hosted MCP server and read your spoken or typed reply back as text; the iPhone app is a paid subscription.",
+      "icon": "./plugins/radres/call-me/assets/icon.png"
+    },
+    {
       "name": "abuzzhive",
       "displayName": "AbuzzHive",
       "source": {

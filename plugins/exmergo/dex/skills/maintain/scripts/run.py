@@ -74,7 +74,7 @@ from pathlib import Path
 # Rewritten by scripts/prepare_release.sh to the tagged version. The connector
 # extra is deliberately NOT part of this pin: it is chosen at runtime (see
 # _resolve_connector), so a release artifact is connector-neutral.
-DEX_CORE_VERSION = "1.16.0"
+DEX_CORE_VERSION = "1.16.1"
 
 # Connector id -> packaging extra. The engine's connector ids and the pyproject
 # extras share names, so this is the identity set today. An unknown or unset
@@ -546,13 +546,15 @@ def _warm(argv: list[str]) -> int:
     )
     elapsed = round(time.monotonic() - started, 3)
     if completed.returncode != 0:
-        lines = [line.strip() for line in completed.stderr.splitlines() if line.strip()]
+        # A fixed message, never uv's stderr or the spec: an index URL, a proxy,
+        # or a `file://` path in either can carry a credential, and this wrapper
+        # is stdlib-only, so it has no redaction of its own to run them through.
         print(
             _envelope(
                 "error",
                 errors=[
-                    f"warm-up could not install {spec[1]}. uv reported: "
-                    + (" ".join(lines[-3:]) or "nothing on stderr")
+                    "warm-up could not install the connector extra; re-run with "
+                    "uv directly to see why"
                 ],
                 reason="prerequisite",
             )

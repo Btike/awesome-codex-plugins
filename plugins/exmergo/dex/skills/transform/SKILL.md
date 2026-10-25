@@ -105,7 +105,9 @@ fetches the engine's dependencies from PyPI or your configured index.
    `transform references <name> [more...]`, free on every connector. Read
    `data.completeness`; when it is `incomplete`, open each site under
    `data.indeterminate` and decide yourself rather than treating the resolved
-   list as exhaustive.
+   list as exhaustive. Before writing a filter, `CASE` or aggregation on a
+   column, ask how the project already treats it:
+   `transform references <model.column> --usage`.
 3. **Author and plan.** Write the content into an edits file and run
    `transform plan "<intent>" --edits-file <path|->`
    (`--scaffold <table>` drafts a staging model from the `.dex/` cache). The
@@ -156,6 +158,10 @@ a field, flag, or macro you need is not described here.
   unknown, not zero. On a billed connector, measuring needs `--attribute-rows`
   plus the cost handshake, which follows the same spending rules as a build
   (see Building): inside committed limits confirm it, otherwise ask first.
+- A contradiction warning means pick a side: update the declaration in the same
+  plan when the change is the job, or restore the SQL when it is not. `stale`
+  says which side looks out of date; `unchecked` means dex could not read the
+  SQL for that rule, so read it yourself before applying.
 - A SELECT list that diverges from the model's `schema.yml` is warned in both
   directions. Fix whichever side is stale, and tell the user which one you
   decided it was.

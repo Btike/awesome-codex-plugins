@@ -23,6 +23,13 @@ description: "pro-launch: build an app or product 0 to 1 with AI, taste-first: p
 7. **要深度**：交完整报告而不是问答，做完直接打开给他看 → D8 D18
 8. **自己做别问我，用好现有工具**：只问口味/花钱/发布/账号；先查连接器与 MCP → D9 D10
 
+## 视觉总闸（任何"给人看的画面"都先过这里，2026-10-24 官网三版被骂"垃圾"后加）
+App 屏、官网/落地页、海报、宣传图、"先出几个预览看看"——**全部算第 6 阶段**，不因为是网页或"只是预览"就跳过：
+1. 先查全局库 `python3 ~/.claude/style-library/lookup.py <族字母或关键词>`（提示词与参考库只有一份，不拷进 skill；库不在就说明），在产物里写「用了库条目：…」；再读 `references/06b-visual-craft.md`；做网页再读 `references/06c-web-craft.md`（= pro-motion `web-craft.md` 的同步副本，主版本在 pro-motion，改那边再同步）。
+2. 参考在写第一行代码**之前**选定并拆成技法表，`Register:`（克制 / 风格化）从用户喜欢的参考里定。网页的技法表、风格帧、参考拆层文件都放 `docs/site/`（`web_gate.py` 默认查这里；App 屏才用 `docs/technique-sheets.md`）。**先做页面、再去找参考来比 = 无效**，参考只剩打分作用。
+3. `phase_gate.py <项目> frames`（网页用 `web`，它调用 pro-motion 的 `web_gate.py`：参考拆层文件、技法表字段、Register/Picked、git 时间核对技法表先于代码）全 PASS 才写代码；发给用户前再跑 `web_gate.py <项目> --ship`。
+4. 发给用户前：如果"哪里不如它"里有一条是**结构或风格化程度**的差距（不是细节），这版不发，重做。
+
 ## 开工三步（每次，不问用户小事）
 0. 读 `references/user-repeated-demands.md`（一页，35 条），并把项目文件夹与记忆里已有的材料先翻一遍，再决定缺什么。
 1. `python3 scripts/phase_gate.py <项目目录> all` 看现在在哪个阶段、前一阶段产物是否是真的。
@@ -34,11 +41,11 @@ description: "pro-launch: build an app or product 0 to 1 with AI, taste-first: p
 | # | 阶段 | 必须产物（写进项目 docs/） | 门槛（不满足不进下一阶段） | 细则 |
 |---|---|---|---|---|
 | 1 | 想法与定位 | `positioning.md`：品类一句话、用户、3 个相邻品类对比表、为什么现在、最大风险，每个数字标【实查】/【判】 | 能用一句话讲清"和谁不同"；至少一个数字来自实查；报告要有深度、有证据（D8 D12） | 01 |
-| 2 | 起名与品牌 | `naming.md` + `trademark.md`（商标，见 `references/13-trademark-ip.md`）：评分表（含义/多语读音/独特性/域名/气质/风险）+ 淘汰理由 + 域名与同名 App 检索结果 | 用 `scripts/domain_check.py` 跑过 ≥8 个候选（默认扫品牌短变体，附 SHORTLIST，D33）；前 3 名给用户 2–4 个选项，**付款与注册由用户本人**；报告要完整（D8） | 02 |
+| 2 | 起名与品牌（品牌成套策划：先填 `~/.claude/skills/pro-motion/references/brand-system.md` 的核心五项与触点表） | `naming.md` + `trademark.md`（商标，见 `references/13-trademark-ip.md`）：评分表（含义/多语读音/独特性/域名/气质/风险）+ 淘汰理由 + 域名与同名 App 检索结果 | 用 `scripts/domain_check.py` 跑过 ≥8 个候选（默认扫品牌短变体，附 SHORTLIST，D33）；前 3 名给用户 2–4 个选项，**付款与注册由用户本人**；报告要完整（D8） | 02 |
 | 3 | 找参考 | `refs/style-names.md`（风格名词库，先于搜作品）+ `refs/style-refs/INDEX.md`（每张图一张"反推提示词卡"，**附创意算子与 3 个衍生变体**）+ `competitors.md`（只当功能清单） | **顺序铁律：GitHub 开源与高质量库 → App Store 获奖/宣传图 → 游戏 UI/海报/艺术作品 → 灵感平台。** ★≥8 个来源，≥4 个不是 App，≥2 个开源/获奖，每张卡有反推提示词**原文**，总指挥读原文不只读报告（D1 D28）、★`creative operator` 与 3 条 `derived variants`（D20）；封闭社区词请用户截图喂图，进 manual-tasks（D21） | 03 · 03b |
 | 4 | 风格圣经 | `style-bible.md`：规则（可检查的"要/不要"）+ 色字体 token + 3 个反例 | ★≥3 张反推提示词卡；规则可被截图验证，含"反例"；项目 CLAUDE.md 有"审美红线"（D2 D3） | 04 |
 | 5 | 功能策划 | `feature-map.md`：入口层级图、功能优先级表（乘法增量/成本）、"砍掉"清单 | ★写明 aha 及 ≤3 步到达（D4）；每个功能写乘法增量；有"砍掉"清单（D15）；对照"大类即入口、进即编辑器、可直接导出、预览同尺寸"范式，写出选模板步数；单图效果长在画面内（D22 D29）；★新模板先过 `phase_gate.py <项目> cards`（D27） | 05 |
-| 6 | UI/UX 构建循环 | **先 06b**：`technique-sheets.md` + `style-frames.md`（3 个风格帧，各配具名参考与 `-vs-ref.jpg`，有 `Picked:`）；再 `ui-log.md`：每版一节（参考→机制→SwiftUI 能力→截图→"哪里不如它"） | ★`phase_gate.py <项目> frames` 全过才写 UI 代码（D25）；**先出风格预览给用户选再写真代码；能代码批量生成就做风格实验室网格页（≥12 格），审美方向交 Codex（D23）**；★"哪里不如它"表 ≥3 行、无 N/10；每屏 ≥2 项平台能力；第 3 版仍不满意 → 停下写方案（D5 D7 D16 D17） | 06b · 06 |
+| 6 | UI/UX 构建循环（含官网、落地页、任何预览） | **先 06b（网页加 06c）**：`technique-sheets.md` + `style-frames.md`（3 个风格帧，各配具名参考与 `-vs-ref.jpg`，有 `Picked:`）；再 `ui-log.md`：每版一节（参考→机制→SwiftUI 能力→截图→"哪里不如它"） | ★`phase_gate.py <项目> frames`（网页 `web`）全过才写 UI 代码（D25 D38）；**先出风格预览给用户选再写真代码；能代码批量生成就做风格实验室网格页（≥12 格），审美方向交 Codex（D23）**；★"哪里不如它"表 ≥3 行、无 N/10；每屏 ≥2 项平台能力；第 3 版仍不满意 → 停下写方案（D5 D7 D16 D17） | 06b · 06 |
 | 7 | 素材生成 | `asset-list.md`：每个素材谁生成、提示词、出处/授权、处理方式 | 素材不用代码画；★每项有来源/授权；去底/矢量化走 `scripts/cutout_vector.sh`；不重复同一张（D11 D19） | 07 |
 | 8 | 真机与 QA | `qa-walkthrough.md`：新用户走查（每屏截图+问题）、权限被拒/离线/空状态、性能数 | 真机或标明"仅模拟器"；失败不能显示成功（D12）；卡死先量原因再动手（D6）；模拟器 ≤1 台、高负载数据作废（D31）；有相机就过深度清单（D32） | 08 |
 | 9 | 发布视频 | `video-brief.md`：音乐机制、主角、镜头表 + ★`marketing-to-product.md`（卖点→产品位置→状态） | **音频先行**，★写明转场方式（D7）；★片里每个卖点产品里真有，否则进待办或改片（D30）；成片前先抽帧联系表；委托 `pro-motion` | 09 |
@@ -47,7 +54,7 @@ description: "pro-launch: build an app or product 0 to 1 with AI, taste-first: p
 | 12 | 开源与上架 | `ship-checklist.md` + `lessons.md`；开源仓库另加 `distribution.md`（体检数据、活跃列表、修复 PR、人工渠道，见 12b） | 隐私政策/条款真实链接、订阅页合规、许可证、素材授权、无密钥入库；★`docs/lessons.md` 记下本项目新坑与落盘位置（D2）；开源仓库提 PR 前 ★`gh_exposure.py lists` 判活，只投 ALIVE（D26） | 12 · 12b |
 
 细则（到该阶段**才读**那一页，读完必须产出上表那个文件）：
-`references/01-idea-positioning.md` · `02-naming-brand.md` · `03-find-references.md` · `03b-style-names-and-creative-decode.md` · `04-style-bible.md` · `05-feature-planning.md` · `06b-visual-craft.md`（UI 阶段先读）· `06-ui-build-loop.md` · `07-asset-generation.md` · `08-device-qa.md` · `09-launch-video.md` · `10-gtm-social.md` · `11-growth-data.md` · `12-ship-opensource.md` · `12b-oss-distribution.md`（均在 `references/`），错误账本 `references/mistakes.md`。
+`references/01-idea-positioning.md` · `02-naming-brand.md` · `03-find-references.md` · `03b-style-names-and-creative-decode.md` · `04-style-bible.md` · `05-feature-planning.md` · `06b-visual-craft.md`（UI 阶段先读）· `06c-web-craft.md`（网页先读）· `06-ui-build-loop.md` · `07-asset-generation.md` · `08-device-qa.md` · `09-launch-video.md` · `10-gtm-social.md` · `11-growth-data.md` · `12-ship-opensource.md` · `12b-oss-distribution.md`（均在 `references/`），错误账本 `references/mistakes.md`。
 
 ## 开工前盘点与工具可用性
 盘点前先跑 `git branch -a` 与 `git worktree list`（M38）；陌生名字先 grep 项目与记忆，可能是语音识别错（M39）；方案里用到 Rive/Spline/LottieFiles 先标可用性：Rive MCP 需开桌面编辑器，Spline、LottieFiles 需用户 /mcp 授权（M40）。后台任务写明完成后自动做什么（M36）。
@@ -62,7 +69,7 @@ description: "pro-launch: build an app or product 0 to 1 with AI, taste-first: p
 1. **参考先于代码。** 没有 INDEX.md 里的具体参考作品，不写任何 UI 代码。
 2. **示例只是种子。** 用户给的例子要扩成整个品类研究，找他没说的，再收拢成 2–4 个互相咬合的机制。
 3. **自评不可信。** 验收 = 截图与具体参考并排 + 写"哪里不如它"。分数只能当参考，不能当结论。
-4. **口味问题必须带可见预览**（图/HTML/截图），给 2–4 个选项加推荐；没有预览先做预览。
+4. **口味问题必须带可见预览**（图/HTML/截图），给 2–4 个选项加推荐；没有预览先做预览，但预览本身也要先过上面的视觉总闸（先参考、后预览）。
 5. **一个会话一个里程碑，一个产品一个主会话。** 约 300 回合或开始变卡，把红线/结论/未完成项写进 CLAUDE.md，新开会话；其它会话成果写进项目文档，主会话读文档不重读长对话（D34）。
 6. **第 3 版不满意就停。** 写诊断和新方案，不在旧方案上堆补丁。
 7. **美术不靠代码画。** 用真实资产或生成资产；代码只做排版与效果。风格帧 = App 真实渲染/截图 + 排版 + 系统界面外壳（06b）。

@@ -21,7 +21,16 @@ of or on top of hand-authored edits.
 - `data.declarations.<model>`: for every model the plan creates, edits or
   declares, `drafted`, `declared` and `missing`. Free on every connector: it reads
   the `.dex/` cache and the repository and opens no connection. Shape in
-  `declarations.md`. Absent when the plan touches no model.
+  `declarations.md`. Absent when the plan touches no model. `drafted.precedent`
+  says what the project's other models do with each column this one filters,
+  branches on or aggregates, grouped and counted.
+- Contradiction warnings: on a model that already exists, a declared rule the
+  edit breaks, also listed under `data.declarations.<model>.contradictions`
+  (`check`, `status`, `rule`, `stale`, `prior`, `authored`, `preexisting`,
+  `row_delta`). Shape and states in `declarations.md`. Never a refusal.
+- Literal warnings: a value compared directly to a column whose cached domain is
+  complete and does not hold it, naming any case- or whitespace-insensitive
+  match. Silent on a capped domain or a PII-flagged column; never a refusal.
 - Shape warnings: the authored SELECT list against the columns `schema.yml`
   declares, in both directions, silent where the model declares none.
 - The resolved-key convention: a model exposing a raw foreign key where at least
@@ -44,7 +53,7 @@ co-author through it. An apply that wrote nothing, or stopped at
 `needs_confirmation`, returns no trailer, because there is nothing of dex's to
 commit.
 
-## `transform references <name> [more...] [--kind <k>] [--full]`
+## `transform references <name> [more...] [--kind <k>] [--full] [--usage]`
 
 Where each name is used across model SQL, `schema.yml`, `dbt_project.yml`,
 macros, semantic YAML, seed headers, and installed packages. Repo-only and free.
@@ -60,6 +69,12 @@ macros, semantic YAML, seed headers, and installed packages. Repo-only and free.
   `model.column` is resolved through the `ref()` graph, and same-named columns
   outside that lineage are marked `same_name_elsewhere`.
 - Capped at 200 occurrences across 50 files; `--full` lifts both.
+- `--usage` also reports how other models use each qualified `model.column`
+  (or `source_table.column`): each target gains `usage`, the same `readers`,
+  `groups` and `elided_groups` as `drafted.precedent`, and its limits fold into
+  `data.completeness`. Ask it before writing a filter. A bare column name is
+  refused, because a column of the same name on another relation is a different
+  column. `--full` lifts its caps too.
 
 ## `transform rename <kind> <old> <new> [--edits-file <f>]`
 

@@ -117,6 +117,13 @@ on any connector.
                        "unit": {"value": "fraction", "evidence": "... a hypothesis about the unit, not a certified one"}}},
    "domains": [{"column": "raw_orders.status", "used_in": ["where"],
                 "values": ["shipped", "cancelled"], "elided": 0, "complete": true}],
+   "precedent": [{"column": "raw_orders.status",
+                  "this_model": [{"usage": "where", "expression": "status <> 'cancelled'"}],
+                  "readers": 5,
+                  "groups": [{"usage": "where", "expression": "NOT status IN ('cancelled', 'returned')",
+                              "count": 4, "models": ["fct_revenue", "..."], "elided_models": 0},
+                             {"usage": "none", "count": 1, "models": ["fct_gross_orders"], "elided_models": 0}],
+                  "elided_groups": 0, "completeness": "complete", "limits": []}],
    "inputs": [{"relation": "raw_orders", "profiled": true, "identifier": "shop.main.raw_orders"}],
    "incomplete": []},
  "declared": {"description": "...", "grain": ["order_id"], "population": {...}, "columns": {...}},
@@ -136,6 +143,7 @@ rests on, and a fact the cache cannot support is left out rather than guessed:
 | `columns.<c>.additivity` | `semi_additive` where `explore profile --check-cumulative` found the upstream column never decreasing |
 | `columns.<c>.unit` | `fraction` for a non-integer column profiled entirely in 0 to 1; `percent` for one named like a percentage profiled in 0 to 100. A hypothesis, never a certified unit |
 | `domains` | the cached value domain of each column the SQL filters (`where`, `having`, `qualify`) or branches on (`case`), capped by `profile_value_domain_cap` with the rest counted in `elided`. A PII-flagged column's values are never drafted: `values` is null and `withheld` says why |
+| `precedent` | for each upstream column the SQL filters, branches on or aggregates, what the project's other models reading the same relation do with it: `this_model` (this model's own uses), then `groups`, one per filter conjunct (`where`, `having`, `qualify`), `CASE` condition (`case`) or aggregation (`aggregation`), with `count` and `models`, and `usage: none` for readers that keep every value. See below |
 | `inputs` | every relation the SQL reads; one the cache has not profiled is `profiled: false` with the `command` that would profile it |
 | `incomplete` | why part of the SQL was not read: a macro or jinja block, a set operation, an unqualified column in a multi-relation select |
 
@@ -145,6 +153,89 @@ names each intent field nobody has supplied (`description`, `grain`,
 `population`, `assumptions`, `columns.<c>.role`, and a measure's `aggregation`,
 `additivity` and `unit`), and each is also a warning. Where the drafted grain and
 the declared one disagree, a warning says so.
+
+### Precedent
+
+Precedent is evidence, not a rule. Every group is listed, conflicting ones
+included, and none is called the majority: four models excluding cancelled orders
+and one keeping them is the case worth reading before writing a sixth. Decide,
+then record the decision in the declaration with `evidence: precedent`, naming the
+models you followed.
+
+- A column is the same column only where the SQL resolves to it through its
+  aliases and CTEs. `status` on another relation is not precedent.
+- Readers are the models that `ref()` or `source()` the relation directly. A
+  model reading a downstream model built from it is not counted.
+- Groups are by sqlglot's rendering of each fragment, not by logical
+  equivalence: `status not in ('a', 'b')` and `status <> 'a' and status <> 'b'`
+  are two groups.
+- `completeness` uses the `transform references` vocabulary. It is `incomplete`
+  when a reader could not be read statically (a macro, a jinja block), when a
+  `ref()` could not be resolved, or when a use of the column could not be traced;
+  each reason is in `limits`, and such a reader is never counted as one that
+  keeps every value.
+- Capped at 10 groups and 5 model names per group, with the rest counted in
+  `elided_groups` and `elided_models`.
+  `transform references <model.column> --usage --full` returns the same answer
+  uncapped, before any SQL is written.
+
+### Literals the column never holds
+
+Where the SQL compares a column directly to literals (`=`, `<>`, `IN`, `NOT IN`)
+and the cache holds that column's complete value domain, a literal the domain does
+not contain is a warning, naming any value that matches it ignoring case and
+whitespace ("compares stg_orders.status to 'Cancelled', which none of its 3
+profiled values is; 'cancelled' matches it ignoring case and whitespace"). It is
+silent when the domain was capped (`elided` above 0), when the column carries a
+PII flag at any confidence, when the comparison wraps the column in a function,
+and when the literal's type differs from the column's values. Never a refusal: a
+filter on a value that does not exist yet is sometimes the intent.
+
+### Contradictions
+
+On a model that already exists, `data.declarations.<model>.contradictions` lists
+each declared rule this plan's SQL and the post-change declaration disagree on.
+Each entry is also a warning. A new model carries no key; an empty list means
+nothing was contradicted.
+
+```json
+{"check": "population", "status": "contradicted",
+ "rule": "population.filters status excludes ['cancelled']", "column": "status",
+ "stale": "sql", "prior": "status <> 'cancelled'", "preexisting": false,
+ "row_delta": 2}
+```
+
+| `check` | Fires when |
+|---|---|
+| `population` | the predicate implementing a declared `population.filters` entry is removed or changes the values it keeps. `excludes` is met by `<>`/`NOT IN` on exactly those values, or by an `IN` list that leaves them out; `includes` by `=`/`IN` on exactly those values |
+| `grain` | the drafted grain (the `GROUP BY` keys, or a carried key) differs from the declared grain, or a declared grain column leaves the SELECT list |
+| `columns` | a column whose declaration states a role, unit, additivity or another `config.meta.dex` field leaves the SELECT list. It names what the column was declared as, beside the plain `schema.yml` divergence warning |
+| `additivity` | the model takes `SUM` of an upstream column its own model declares `semi_additive` or `non_additive`, or `AVG` of one declared `non_additive` with a `fraction` or `percent` unit. `declared_on` names that upstream model. A running total the cumulative check found and nothing declares fires too, without `declared_on`; a column declared `additive` never does |
+
+Three states are compared: the prior SQL and declaration, the authored SQL and
+the post-change declaration, and what this plan changed between them.
+
+| What the plan did | `stale` |
+|---|---|
+| changed the SQL, left the declaration, and they now disagree | `sql` |
+| changed the declaration, left the SQL, and they now disagree | `declaration` (or the plan is half done) |
+| changed both, and they still disagree | `either` |
+| changed both, and they agree | nothing reported |
+| touched neither side of a rule that already disagreed | nothing reported |
+
+`preexisting: true` marks a rule that already disagreed before this plan and
+that this edit touches. `status: unchecked` (with `reason`, and no `stale`) is a
+rule the plan touched that dex could not read the SQL for: a macro or jinja
+predicate, a function around the column (`lower(status) <> 'x'`), a subquery, a
+set operation, or a grain no key proves. It never claims the rule was removed.
+Comparison is on sqlglot's reading of the SQL, so a reformat, an alias rename,
+`!=` for `<>`, and `NOT IN ('a', 'b')` for `<> 'a' AND <> 'b'` are silent.
+
+A contradicted population is paired with row attribution's report of the same
+predicate. Where attribution measured it (DuckDB, or `--attribute-rows` with the
+cost handshake on a billed connector), `row_delta` is its delta and the warning
+cites it; where it did not, the warning carries attribution's reason. Nothing
+here runs a query of its own, refuses a plan, or blocks apply.
 
 ## `data.decisions`
 

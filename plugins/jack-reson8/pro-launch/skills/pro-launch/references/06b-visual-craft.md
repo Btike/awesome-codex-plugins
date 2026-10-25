@@ -10,6 +10,9 @@ Why this exists: in pro-motion the launch/brand films Jack praised came from one
 - The product's **latest real renders**: simulator screenshots, template outputs, icon. If there are none, render them first (`xcrun simctl io booted screenshot`, or the app's own export). Every frame below is built from these.
 - Output: the header of `docs/technique-sheets.md` lists the red lines checked and the style-library entries reused.
 
+## V0.5 · Register: restraint or stylized (decide before V1, write `Register:` in style-frames.md)
+Look at the references the **user** liked (not the ones you like). If they are full-bleed, saturated, type-as-material, real objects cut out over a slab of colour (Lapse, record sleeves, zines), the register is **风格化** and V4's Apple restraint does not apply; use V4s. If they are white stages, one product shot, SF-type hierarchy, the register is **克制** and V4 applies. Mixing them is how the 2026-10-24 Tutti site came out as "paper margins + small photo + captions" = "web 感重": restraint layout dressed in doodle fonts.
+
 ## V1 · Real frames, not memory
 Pick 6–10 references across media (Apple keynote / "Shot on iPhone" films, award-winning apps, game UI, editorial print, anime OP), plus ≥1 that is **not** a screen product. Then:
 ```bash
@@ -53,11 +56,21 @@ Compared with 03's reverse-prompt card, this sheet measures **composition** (her
      --label "Apple · Hello, MacBook Neo" --short "…" --short "…" --short "…" --out docs/style-frames/A-vs-ref.jpg
    python3 scripts/style_frame.py sheet docs/style-frames/A.jpg B.jpg C.jpg --out docs/style-frames/pick.jpg
    ```
+   **Core-gap gate:** if any line is about structure or stylization register ("ref is a full-bleed key visual, ours is a page layout"; "ref's type is image material, ours is captions"), the frame is not shown. Rebuild from the technique sheet first. On 2026-10-24 three Tutti site frames were sent with three core-gap lines each; Jack: "差距也太大了吧，完全不是一个事情".
    `compare` refuses fewer than 3 lines or any N/10 score. Lines are element-level ("ref's hero fills ~55%, our card 38%"; "ref uses one weight, we mix Medium+Heavy").
 5. Show Jack a review page (HTML, or open `pick.jpg` + the three `-vs-ref` images in the file pane). Use 2–4 options plus your recommendation, per the taste-question rule. Template H in `assets/templates.md`.
 6. Write `Picked: <A|B|C|mix: …>` in `docs/style-frames.md`. **Until that line exists, write no UI code** (gate). A mix ("B's opening + D's transition") counts.
 
-## V4 · Apple-style restraint (check every frame and every built screen)
+## V4s · Stylized register (Register: 风格化)
+- [ ] **One key visual owns ≥90% of the screen**, full-bleed: no paper margins, no cards, no page sections in the first screen.
+- [ ] **Type is material**, not captions: set huge, warped/stacked/repeated, behind or around the real subject; the slogan *is* the background.
+- [ ] **A real object or person cut out in front** (≥40% height), cropped by an edge; the depth sandwich ground → type → subject → grain is visible.
+- [ ] **One saturated ground** per state plus one ink and one glow; colour changes with state, not inside a state.
+- [ ] **Grain or print texture over everything**, animated if the page moves.
+- [ ] **One action** in the first screen; everything else is a small text link.
+- [ ] **Nothing code-drawn** that a designer would have drawn (icons, blobs, mascots, clotheslines, broken-image glyphs). Shapes made by the effect itself (holes, warps, flashes) are fine.
+
+## V4 · Apple-style restraint (Register: 克制; check every frame and every built screen)
 Each line came from what made the accepted frames work:
 - [ ] **One hero per screen** that takes ≥40% of the frame. Everything else supports it or goes.
 - [ ] **Big type scale**: largest:smallest ≥ 4:1 (accepted Tutti frame A: 190pt vs 44pt). At most 2 weights. Short lines like "Hello", "One photo. Twelve of you."
@@ -67,6 +80,15 @@ Each line came from what made the accepted frames work:
 - [ ] **A real system moment** where it fits: lock screen, notification, Dynamic Island, share sheet, widget. This is how Apple makes UI feel native in films, and it makes our frame read as "an iPhone app" rather than "a web page".
 - [ ] **Subjects vary** across frames and screens; no repeated photo.
 - [ ] Words ≤ 12 per frame; the picture carries the meaning.
+
+## V4b · Real-object metaphors (D36): use them widely, but only the kind nobody has to learn
+The hanger in Tutti worked (photos you just shot hang on a cord; take one down to use it) and the user asked for the approach everywhere. The "print-bed editor / ink-dab colour picker / press-to-print" were rejected two days earlier. The difference is learnability, so the gate is:
+- [ ] **Named without words**: a 15–25-year-old can say what the object is from the drawing alone.
+- [ ] **Behaves like the real thing**: every gesture is something the real object affords (hang, take down, slide along, lift). Anything the real object can't do is cut.
+- [ ] **One job per object**, and no two objects on one screen compete for the same job (a tab bar stacked on top of a hanger = clutter; pick one).
+- [ ] **Still the brand's drawing**: marker lines and cut paper, never 3D skeuomorphic shading.
+- [ ] **≤3 kinds of object per screen**; every object has an empty, a full and a failed state.
+- [ ] Keep a project table `scene → object → behaviour → sound/haptic → state` and take one row per build step; each built object gets a screenshot plus one line "does it read as the real thing without learning", no score.
 
 ## V5 · Hand-off to the build loop (06)
 Turn the picked frame into the style bible's tokens (04): colours, type sizes and weights, hero share, corner radius, shadow. Each later `ui-log.md` version compares its **screenshot against both the picked style frame and the original reference** with the same `compare` command, so the build can't drift away from what was picked.

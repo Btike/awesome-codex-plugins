@@ -34,7 +34,7 @@ Hand content over with `--edits-file <path>` (or `-` to read stdin):
 | `analysis_sql` | analysis paths | a single read-only SELECT, even though dbt only compiles it |
 | `packages_yml` | project root | the guarded way to declare a dbt package |
 | `project_yml` | project root `dbt_project.yml` | keeps a `name` |
-| `profiles_yml` | project root `profiles.yml` | every secret as `{{ env_var('NAME') }}`; a literal credential is refused so none reaches the diff |
+| `profiles_yml` | project root `profiles.yml` | every secret as exactly `{{ env_var('NAME') }}` (an empty default at most); a literal credential, a non-empty default, or anything beside the reference is refused so none reaches the diff |
 
 Config kinds, snapshots, and seeds are all parsed by dbt at plan time.
 

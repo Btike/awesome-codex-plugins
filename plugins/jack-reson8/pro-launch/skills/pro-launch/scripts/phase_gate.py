@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gate check: does the project folder contain this phase's required artifacts, and are they filled in?
 
-  python3 phase_gate.py <project_dir> <phase|all>       phases: positioning naming refs cards style features frames ui assets qa video gtm growth ship
+  python3 phase_gate.py <project_dir> <phase|all>       phases: positioning naming refs cards style features frames web ui assets qa video gtm growth ship
 
 Prints PASS/FAIL per artifact and exits 1 on any FAIL. Run it at the START of a phase (are the previous phase's artifacts real?)
 and at the END (did I produce mine?). A file counts only if it exists, is >300 bytes and has no 'TODO' / empty template fields.
@@ -12,6 +12,9 @@ Beyond "file is real", extra checks encode what the user keeps repeating (refere
   features/growth  must name the aha moment                                                  (D4)
   frames 06b visual craft, run BEFORE any UI code: >=3 technique sheets (hero/type scale/whitespace/signature),
          >=3 existing *-vs-ref.jpg style-frame comparisons, >=1 [product-native] direction, a 'Picked:' line   (D25)
+  web    website / landing page / any web preview = phase 6 too: same frames checks under docs/site/, plus a 'Register:' line
+         (克制 or 风格化, taken from the refs the user liked) and git proof that technique-sheets.md was committed BEFORE the
+         first commit touching the site code dir (default site/; override "web_code"; after a rejection set "web_restart": <rev>)   (D25 D38)
   ui     "不如它" table >=3 rows, no N/10 score used as verdict, + every frames + cards check     (D5 D25 D27)
   cards  docs/creative-cards.md: every card has 意图/算子/参数轴(>=3)/衍生(3)/融合; no card = no build (D20 D27)
   video  must state the transition method (转场) + docs/marketing-to-product.md maps every claim (D7 D30)
@@ -28,6 +31,7 @@ GATES = {
     "style":       ["docs/style-bible.md"],
     "features":    ["docs/feature-map.md"],
     "frames":      ["docs/technique-sheets.md", "docs/style-frames.md"],
+    "web":         ["docs/site/technique-sheets.md", "docs/site/style-frames.md"],
     "ui":          ["docs/ui-log.md"],
     "assets":      ["docs/asset-list.md"],
     "qa":          ["docs/qa-walkthrough.md"],
@@ -114,14 +118,14 @@ def extra_ui(root):
     ] + extra_craft(root) + extra_cards(root)
 
 
-def extra_craft(root):
+def extra_craft(root, base="docs"):
     """06b visual craft: technique sheets, 3 style frames each beside a reference, a pick before UI code."""
-    ts = read(root, "docs/technique-sheets.md")
+    ts = read(root, f"{base}/technique-sheets.md")
     sheets = re.split(r"(?m)^### ", ts)[1:]
     n_full = sum(1 for s in sheets if all(len(field(s, k)) > 3 for k in ("hero", "type scale", "whitespace", "signature move")))
-    sf = read(root, "docs/style-frames.md")
+    sf = read(root, f"{base}/style-frames.md")
     vs = sorted(set(re.findall(r"[\w./-]+-vs-ref\.jpg", sf)))
-    vs_ok = [v for v in vs if (root / v).exists() or (root / "docs/style-frames" / pathlib.Path(v).name).exists()]
+    vs_ok = [v for v in vs if (root / v).exists() or (root / base / "style-frames" / pathlib.Path(v).name).exists()]
     pick = re.search(r"(?mi)^\W*picked:[ \t]*(\S.*)$", sf)
     return [
         (n_full >= 3, f"technique-sheets.md: >=3 references with hero/type scale/whitespace/signature move filled (have {n_full})  [D25]"),
@@ -129,6 +133,31 @@ def extra_craft(root):
         ("[product-native]" in sf, "style-frames.md has >=1 [product-native] direction  [D25]"),
         (bool(pick), "style-frames.md has a 'Picked:' line (no UI code before it)  [D25]"),
     ]
+
+
+def first_commit(root, path, since=None, added=True):
+    import subprocess
+    cmd = ["git", "-C", str(root), "log", "--format=%ct"] + (["--diff-filter=A"] if added else []) + ([f"{since}..HEAD"] if since else []) + ["--", path]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    times = [int(x) for x in r.stdout.split()] if r.returncode == 0 else []
+    return min(times) if times else None
+
+
+def extra_web(root):
+    """Websites follow pro-motion's web order (single source of rules): run its web_gate.py and report its lines."""
+    import subprocess
+    gate = pathlib.Path.home() / ".claude/skills/pro-motion/scripts/web_gate.py"
+    if not gate.exists():
+        return [(False, f"missing {gate} (install pro-motion; web rules live there)")]
+    args = [sys.executable, str(gate), str(root)]
+    cfg = root / ".prolaunch.json"
+    if cfg.exists():
+        c = json.loads(cfg.read_text())
+        if c.get("web_code"): args += ["--code", c["web_code"]]
+        if c.get("web_restart"): args += ["--restart", c["web_restart"]]
+    r = subprocess.run(args, capture_output=True, text=True)
+    lines = [l.strip(" -✗✓") for l in (r.stdout + r.stderr).splitlines() if l.strip()]
+    return [(r.returncode == 0, "pro-motion web_gate: " + l + "  [D38]") for l in lines] or [(r.returncode == 0, "pro-motion web_gate")]
 
 
 def extra_video(root):
@@ -162,7 +191,7 @@ def extra_assets(root):
 
 
 EXTRA = {"refs": extra_refs, "cards": extra_cards, "style": extra_style, "features": aha("docs/feature-map.md"),
-         "growth": aha("docs/metrics.md"), "frames": extra_craft, "ui": extra_ui, "video": extra_video, "assets": extra_assets}
+         "growth": aha("docs/metrics.md"), "frames": extra_craft, "web": extra_web, "ui": extra_ui, "video": extra_video, "assets": extra_assets}
 
 
 def main():
