@@ -2,7 +2,7 @@ import importlib.util
 import tempfile
 import unittest
 from unittest.mock import patch
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 SPEC = importlib.util.spec_from_file_location(
     "generate_plugins_json", Path(__file__).resolve().parents[1] / "scripts/generate_plugins_json.py"
@@ -12,6 +12,36 @@ SPEC.loader.exec_module(MODULE)
 
 
 class GeneratedBundleCleanupTests(unittest.TestCase):
+    def test_context_guard_mirror_includes_undeclared_hook_runtime(self):
+        root = PurePosixPath("codex-context-guard-main")
+        names = {
+            "codex-context-guard-main/.codex-plugin/plugin.json",
+            "codex-context-guard-main/hooks/hooks.json",
+            "codex-context-guard-main/scripts/context_guard.py",
+            "codex-context-guard-main/scripts/manage_plugin.py",
+            "codex-context-guard-main/assets/icon.svg",
+            "codex-context-guard-main/assets/state.schema.json",
+            "codex-context-guard-main/internal/not-for-distribution.txt",
+        }
+        manifest = {
+            "name": "context-guard",
+            "skills": "./skills/",
+            "interface": {"composerIcon": "./assets/icon.svg"},
+        }
+        plugin = {"owner": "GreenLv", "repo": "codex-context-guard"}
+
+        paths = MODULE.collect_selected_paths(manifest, names, root, plugin)
+
+        self.assertTrue({
+            ".codex-plugin/plugin.json",
+            "hooks/hooks.json",
+            "scripts/context_guard.py",
+            "scripts/manage_plugin.py",
+            "assets/icon.svg",
+            "assets/state.schema.json",
+        }.issubset(paths))
+        self.assertNotIn("internal/not-for-distribution.txt", paths)
+
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
