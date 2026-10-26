@@ -18,10 +18,11 @@ import urllib.error
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 # --- Config ---
-REGISTRY_API = os.environ.get("REGISTRY_API", "https://hol.org/registry/api/v1")
+REGISTRY_API = os.environ.get("REGISTRY_API", "https://hol.org/api/v1")
+REGISTRY_BROKER_API_KEY = os.environ.get("REGISTRY_BROKER_API_KEY", "")
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 PR_NUMBER = os.environ.get("PR_NUMBER", "")
 PR_TITLE = os.environ.get("PR_TITLE", "")
@@ -149,6 +150,13 @@ def api_request(url, headers=None, method="GET", data=None, retry_registry=False
         data = json.dumps(data).encode("utf-8")
         req_headers["Content-Type"] = "application/json"
     req = urllib.request.Request(url, headers=req_headers, method=method, data=data)
+    if retry_registry and REGISTRY_BROKER_API_KEY:
+        target = urlsplit(url)
+        if (method != "GET" or target.scheme != "https" or target.netloc != "hol.org"
+                or target.path != "/api/v1/plugins/catalog"):
+            raise RegistryCatalogFetchError("Refusing to send the catalog key outside its read endpoint")
+        # urllib does not copy unredirected headers into redirected requests.
+        req.add_unredirected_header("x-api-key", REGISTRY_BROKER_API_KEY)
     attempts = REGISTRY_MAX_ATTEMPTS if retry_registry and method == "GET" else 1
     for attempt in range(attempts):
         retry_after = None
