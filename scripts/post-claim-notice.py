@@ -17,6 +17,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 from urllib.parse import urlencode
 
 # --- Config ---
@@ -344,15 +345,35 @@ def parse_pr_diff_for_repos():
 
 def catalog_source_repos():
     """Read repository identities from listings in the trusted base checkout."""
-    readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
-    with open(readme_path, encoding="utf-8") as readme:
+    root = Path(__file__).resolve().parents[1]
+    with open(root / "README.md", encoding="utf-8") as readme:
         content = readme.read()
     links = re.findall(
-        r"^\s*-\s+\[[^\]]+\]\((?:https://github\.com/|\./plugins/)"
+        r"^\s*-\s+\[[^\]]+\]\((https://github\.com/|\./plugins/)"
         r"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)",
         content, re.MULTILINE | re.IGNORECASE,
     )
-    return {normalize_repo_url(repo) for repo in links}
+    repos = set()
+    for prefix, repo in links:
+        if prefix.lower().startswith("https://"):
+            repos.add(normalize_repo_url(repo))
+            continue
+        manifest_path = (root / "plugins" / repo / ".codex-plugin" / "plugin.json").resolve()
+        if not manifest_path.is_relative_to((root / "plugins").resolve()):
+            raise OSError("Local plugin listing points outside the plugin catalog")
+        try:
+            with open(manifest_path, encoding="utf-8") as manifest_file:
+                manifest = json.load(manifest_file)
+        except (ValueError, TypeError) as error:
+            raise OSError(f"Invalid local plugin metadata for {repo}") from error
+        upstream = manifest.get("repository") if isinstance(manifest, dict) else None
+        if not isinstance(upstream, str) or not re.fullmatch(
+            r"(?:https://github\.com/)?[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?",
+            upstream, re.IGNORECASE,
+        ):
+            raise OSError(f"Local plugin listing has no GitHub repository identity: {repo}")
+        repos.add(normalize_repo_url(upstream))
+    return repos
 
 
 def has_existing_claim_comment():

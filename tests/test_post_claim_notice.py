@@ -3,6 +3,7 @@ import io
 import json
 import os
 import re
+import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -212,14 +213,28 @@ class ClaimNoticeTests(unittest.TestCase):
 
 
 class NoticeEvidenceTests(unittest.TestCase):
-    def test_source_accepts_exact_listing_links_and_local_bundles_only(self):
+    def test_source_accepts_exact_listing_links_only(self):
         readme = "\n".join([
             "- [Plugin](https://github.com/Owner/Plugin.git/tree/main) - Plugin",
-            "- [Local](./plugins/author/local/) - Plugin",
             "Documentation mentions https://github.com/other/unlisted",
         ])
         with patch("builtins.open", mock_open(read_data=readme)):
-            self.assertEqual(MODULE.catalog_source_repos(), {"owner/plugin", "author/local"})
+            self.assertEqual(MODULE.catalog_source_repos(), {"owner/plugin"})
+
+    def test_local_mirror_uses_trusted_upstream_identity_instead_of_folder_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "README.md").write_text("- [Mirror](./plugins/author/alias) - Plugin")
+            manifest = root / "plugins" / "author" / "alias" / ".codex-plugin" / "plugin.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text(json.dumps({"repository": "https://github.com/author/upstream.git"}))
+            with patch.object(MODULE, "__file__", str(root / "scripts" / "post-claim-notice.py")):
+                self.assertEqual(MODULE.catalog_source_repos(), {"author/upstream"})
+
+    def test_local_listing_cannot_read_metadata_outside_the_catalog(self):
+        with patch("builtins.open", mock_open(read_data="- [Bad](./plugins/../../outside) - Plugin")):
+            with self.assertRaises(OSError):
+                MODULE.catalog_source_repos()
 
     def test_manual_dispatch_requires_trusted_merged_metadata(self):
         for merged_at, expected in ((None, None), ("2026-10-26T00:00:00Z", ("Add plugin", "author"))):
