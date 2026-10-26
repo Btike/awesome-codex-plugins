@@ -1860,6 +1860,21 @@
       "icon": "./plugins/MykytaStel/repopilot/.claude-plugin/icon.png"
     },
     {
+      "name": "research-agent-skills",
+      "displayName": "Research Agent Skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/KalarisLabs/research-agent-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "280+ Agent Skills that turn Codex, Claude Code, Cursor and other agents into a research co-scientist across the academic research lifecycle: literature and PRISMA reviews, hypotheses, experimental design, data analysis in biology, chemistry, medicine, physics and ML, paper writing, citation verification and peer review.",
+      "icon": "./plugins/KalarisLabs/research-agent-skills/assets/icon.svg"
+    },
+    {
       "name": "reviewable-html-workbench",
       "displayName": "Reviewable HTML Workbench",
       "source": {
