@@ -14,7 +14,7 @@ until `transform apply`, and any build runs against a dev target only.
 <!-- dex:procedure:begin -->
 ## Procedure
 
-dex works in one loop: explore, transform, maintain. Every step runs one engine
+Dex works in one loop: explore, transform, maintain. Every step runs one engine
 command, reads the single JSON envelope it prints, and decides the next step
 from that envelope.
 
@@ -32,7 +32,7 @@ from that envelope.
    re-plan against the current files. When you commit what it wrote, end the
    commit message with the `data.commit_trailer` line it returned, after a blank
    line, so the forge credits Dex as a co-author. Add it only to a commit that
-   carries files dex wrote.
+   carries files Dex wrote.
 4. **Build and verify on dev.** Run `transform build --target dev --verify`. Read
    `data.verification.ran` first, then relay the findings and anything under
    `suppressed`. A green build says dbt ran, not that the rows are right.
@@ -61,7 +61,7 @@ never edit the dbt project, `.dex/config.yml`, `.dex/cache.json`, or
 
 ## Running the engine
 
-Run commands from the user's project directory, so dex finds that project's
+Run commands from the user's project directory, so Dex finds that project's
 configuration and writes its cache there. The wrapper path is absolute:
 
 - In Claude Code, `${CLAUDE_SKILL_DIR}` is supplied by the host.
@@ -96,11 +96,11 @@ fetches the engine's dependencies from PyPI or your configured index.
 
 ## Transforming, step by step
 
-1. **No dbt project yet?** Offer `transform init "<name>" --connector <c>` before
+1. **No dbt project yet?** Offer `transform init "<name>" --connector <c>` (scaffolds into `<name>/` by default, or the current directory with `--in-place`) before
    anything else. Ask the user for the name and **confirm the connector with
    them**: init never defaults one. Do not hand-write the skeleton. Read
    `${CLAUDE_SKILL_DIR}/references/init-and-dev-target.md` for per-connector
-   setup, `--layered-schemas`, and the namespace warning.
+   setup, `--in-place`, `--layered-schemas`, and the namespace warning.
 2. **Find every use first** when a change has to land in more than one place:
    `transform references <name> [more...]`, free on every connector. Read
    `data.completeness`; when it is `incomplete`, open each site under
@@ -123,7 +123,7 @@ fetches the engine's dependencies from PyPI or your configured index.
    `semantic slayer define|update|plan` (SLayer model files). Read
    `${CLAUDE_SKILL_DIR}/references/semantic-layer.md` first.
 4. **Declare.** Read `data.declarations.<model>` on the plan envelope: `drafted`
-   is what dex measured, `declared` is what the YAML says, `missing` is the intent
+   is what Dex measured, `declared` is what the YAML says, `missing` is the intent
    still owed. Supply the intent, confirm or override each drafted fact in the
    `declarations` entry, and re-plan until `missing` holds only what you decided
    to leave open.
@@ -160,7 +160,7 @@ a field, flag, or macro you need is not described here.
   (see Building): inside committed limits confirm it, otherwise ask first.
 - A contradiction warning means pick a side: update the declaration in the same
   plan when the change is the job, or restore the SQL when it is not. `stale`
-  says which side looks out of date; `unchecked` means dex could not read the
+  says which side looks out of date; `unchecked` means Dex could not read the
   SQL for that rule, so read it yourself before applying.
 - A SELECT list that diverges from the model's `schema.yml` is warned in both
   directions. Fix whichever side is stale, and tell the user which one you
@@ -183,7 +183,7 @@ a field, flag, or macro you need is not described here.
   reasoning is one no reviewer can check.
 - A drafted fact is a draft. Copy one into a declaration only after you agree
   with its `evidence`; a `fraction` or `percent` unit is a hypothesis from a
-  range, and a grain under `withheld` is one dex could not prove, not one that
+  range, and a grain under `withheld` is one Dex could not prove, not one that
   is wrong. An input under `drafted.inputs` with `profiled: false` drafted
   nothing: run the `command` it names when the facts matter, and say so when you
   declare without them.
@@ -196,7 +196,7 @@ a field, flag, or macro you need is not described here.
 - Never list a population filter's values for a column that looks like personal
   data: state the rule in words. The refusal names the `pii_overrides` entry a
   human can add if the column is not personal data.
-- Change a declaration by declaring again in a new plan. dex writes only
+- Change a declaration by declaring again in a new plan. Dex writes only
   `description`, the tests a declaration implies, and `config.meta.dex`; every
   other byte of the YAML stays as it was.
 
@@ -244,7 +244,7 @@ a field, flag, or macro you need is not described here.
   `semantic.ossie.files`, as whole documents. `maintain reconcile` never authors
   into Ossie; this command does.
 - For SLayer, edit only the model files listed in `semantic.slayer.models`, as
-  whole files in the pinned format `version`. dex owns those files: never
+  whole files in the pinned format `version`. Dex owns those files: never
   generate them with `slayer import-dbt`, and never run SLayer tooling that
   rewrites them (`slayer serve`, `slayer ingest`,
   `validate-models --persist-cardinality`). The wrapper installs the `[slayer]`
@@ -253,7 +253,7 @@ a field, flag, or macro you need is not described here.
 - SLayer declares no entities, no aggregation on a saved measure (the formula
   carries it, as in `amount:sum`), and no per-measure time dimension (only the
   model's `default_time_dimension`). Never write those into a SLayer model.
-  SLayer itself ignores a key it does not know, so dex refuses any key the
+  SLayer itself ignores a key it does not know, so Dex refuses any key the
   pinned release does not declare (`[unknown_key]`, naming the file, the element
   and the release, and what SLayer uses instead where there is an equivalent):
   remove it rather than looking for a spelling that passes.
@@ -279,7 +279,7 @@ a field, flag, or macro you need is not described here.
   `profiles.yml` disagree, or when the dev database does not exist. Relay the fix
   it names: edit one file to match the other (the engine never rewrites
   `profiles.yml`), or give the user the `CREATE` or `GRANT` statement to run.
-  dex will not create a database itself.
+  Dex will not create a database itself.
 - On a billed connector the first call returns `needs_confirmation` with an
   estimate (`per_table_bytes` names which node drives it, and `upper_bounds`
   names the incremental lines that will likely bill less).
@@ -303,8 +303,8 @@ a field, flag, or macro you need is not described here.
   `data.session_ceiling_cap`. It counts as a committed daily limit. A refusal
   naming it can only be lifted by the host, never by a flag or a config change,
   so report it rather than work around it.
-- `--verify` is priced into the build's own estimate as a `(row counts)` line, so
-  never add a second budget for it. An `ok` envelope with `data.offer` means the
+- `--verify` is priced into the build's own estimate as `(row counts)` and
+  `(declared facts)` lines, so never add a second budget for it. An `ok` envelope with `data.offer` means the
   build is done and billed: relay the offer instead of re-running the build.
 - Verification findings never fail the build. Do not treat one as a failure or
   re-run to make it go away: relay the finding, its two counts, and the join it

@@ -2141,16 +2141,6 @@
       "install_url": "https://raw.githubusercontent.com/cometchat/cometchat-skills/HEAD/.codex-plugin/plugin.json"
     },
     {
-      "name": "Command Code Usage",
-      "url": "https://github.com/Jovan1666/commandcode-usage",
-      "owner": "Jovan1666",
-      "repo": "commandcode-usage",
-      "description": "Show your Command Code plan usage inside Codex: a per-turn quota line, plus a /quota command for the full panel.",
-      "category": "Tools & Integrations",
-      "source": "awesome-codex-plugins",
-      "install_url": "https://raw.githubusercontent.com/Jovan1666/commandcode-usage/HEAD/plugins/codex/.codex-plugin/plugin.json"
-    },
-    {
       "name": "Computer Usage Summary",
       "url": "https://github.com/liuyewang/computer-usage-summary-skill",
       "owner": "liuyewang",
@@ -2719,6 +2709,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/nowork-studio/notfair-plugin/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "NPMScan",
+      "url": "https://github.com/salemalem/npmscan-mcp-plugin",
+      "owner": "salemalem",
+      "repo": "npmscan-mcp-plugin",
+      "description": "Check npm packages for malware, known vulnerabilities, typosquats and maintainer takeovers before installing, via npmscan.com's free, read-only MCP server (23 tools, no API key).",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/salemalem/npmscan-mcp-plugin/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Nullcost",

@@ -3159,21 +3159,6 @@
       "icon": "./plugins/cometchat/cometchat-skills/assets/composer-icon.png"
     },
     {
-      "name": "commandcode-usage",
-      "displayName": "Command Code Usage",
-      "source": {
-        "source": "local",
-        "path": "./plugins/Jovan1666/commandcode-usage"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Tools & Integrations",
-      "description": "Show your Command Code plan usage inside Codex: a per-turn quota line, plus a /quota command for the full panel.",
-      "icon": "./plugins/Jovan1666/commandcode-usage/assets/composer-icon.svg"
-    },
-    {
       "name": "computer-usage-summary-skill",
       "displayName": "Computer Usage Summary",
       "source": {
@@ -4018,6 +4003,21 @@
       "category": "Tools & Integrations",
       "description": "Open-source SEO, GEO, and paid-ads skills for AI agents, with Google/Meta/X/LinkedIn/Reddit/TikTok Ads, Search Console, GA4, WordPress, and GoHighLevel workflows through one OAuth MCP server.",
       "icon": "./plugins/nowork-studio/notfair-plugin/assets/notfair-icon.png"
+    },
+    {
+      "name": "npmscan",
+      "displayName": "NPMScan",
+      "source": {
+        "source": "local",
+        "path": "./plugins/salemalem/npmscan-mcp-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Check npm packages for malware, known vulnerabilities, typosquats and maintainer takeovers before installing, via npmscan.com's free, read-only MCP server (23 tools, no API key).",
+      "icon": "./plugins/salemalem/npmscan-mcp-plugin/icon.png"
     },
     {
       "name": "nullcost-catalog",

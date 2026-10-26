@@ -15,7 +15,7 @@ each project layer. Detection is read-only; only `reconcile` proposes edits, and
 <!-- dex:procedure:begin -->
 ## Procedure
 
-dex works in one loop: explore, transform, maintain. Every step runs one engine
+Dex works in one loop: explore, transform, maintain. Every step runs one engine
 command, reads the single JSON envelope it prints, and decides the next step
 from that envelope.
 
@@ -33,7 +33,7 @@ from that envelope.
    re-plan against the current files. When you commit what it wrote, end the
    commit message with the `data.commit_trailer` line it returned, after a blank
    line, so the forge credits Dex as a co-author. Add it only to a commit that
-   carries files dex wrote.
+   carries files Dex wrote.
 4. **Build and verify on dev.** Run `transform build --target dev --verify`. Read
    `data.verification.ran` first, then relay the findings and anything under
    `suppressed`. A green build says dbt ran, not that the rows are right.
@@ -62,7 +62,7 @@ never edit the dbt project, `.dex/config.yml`, `.dex/cache.json`, or
 
 ## Running the engine
 
-Run commands from the user's project directory, so dex finds that project's
+Run commands from the user's project directory, so Dex finds that project's
 configuration and writes its cache there. The wrapper path is absolute:
 
 - In Claude Code, `${CLAUDE_SKILL_DIR}` is supplied by the host.
@@ -108,8 +108,8 @@ fetches the engine's dependencies from PyPI or your configured index.
    never in `findings`.
 3. **Drill into one axis** when a finding needs depth: `maintain schema`
    (structure), `maintain volume` (row counts), `maintain grain` (key uniqueness,
-   declared grains, fanout), or `maintain semantic` (definitions and dangling
-   references). Each takes optional `<objects>`.
+   declared grains, fanout), or `maintain semantic` (definitions, dangling
+   references, and changed model declarations). Each takes optional `<objects>`.
 4. **Reconcile.** `maintain reconcile [<class>]` stores the proposed edits as a
    plan and prints a `plan_id`. Read each proposal's `kind` (rules below), then
    apply with `transform apply <plan-id>`. A human edit made since detection
@@ -159,6 +159,12 @@ is not described here.
   back as `definition_removed`. Nothing was removed: the file could not be read.
   Never reconcile those as removals; the fix is the file rewritten in the
   current `version` with `semantic slayer update` (transform skill).
+- `declaration_changed`, `_added` and `_removed` mean what a model *says it
+  means* moved (its population, grain, a column's additivity or unit), even
+  with its SQL unchanged. Relay the field named in `data.field` and the metrics
+  under `impacted_metrics`; the change is a person's decision, so ask whether it
+  was intended rather than proposing to revert it. `data.declaration_drift`
+  with `checked: false` is unchecked, not clean.
 - `join_cardinality_exceeded` means a join's declared arity does not hold, so
   measures across it are inflated. A join declaring no cardinality is in
   `warnings` as unchecked, not passed: relay it as undetermined, and suggest
@@ -166,12 +172,13 @@ is not described here.
 - SLayer's own schema findings (`declared_column_missing`,
   `declared_type_conflict`, `declared_relation_missing`,
   `declared_dependency_dropped`) are SLayer's `validate-models` rules run on
-  dex's metadata. Do not run `slayer validate-models` to confirm them: it reads
+  Dex's metadata. Do not run `slayer validate-models` to confirm them: it reads
   through SLayer's datasource credentials, and opening SLayer's storage can
-  migrate and rewrite the model files dex owns.
+  migrate and rewrite the model files Dex owns.
 - On `maintain verify`, read `data.suppressed` before reading an empty
   `data.findings` as a clean bill. A project that does not compile suppresses
-  every other check. Row population is conservative by design, so a quiet answer
+  every other check. A `unit`, `additivity` or `population` suppression means
+  that declaration was not checked, not that it held. Row population is conservative by design, so a quiet answer
   is weaker evidence than a finding, and `warnings` names the models that could
   not be lined up.
 - For a change you just made, use `transform build --verify` (same sweep, scoped
@@ -183,7 +190,7 @@ is not described here.
 - **On a large `check` report, read the ratio before the findings.** Run
   `maintain reconcile` and read `mechanical_count` and `advisory_count` beside
   the finding codes, before the findings list. Mechanical proposals exist only
-  where dex can author the fix itself (the two cases below), so zero of them
+  where Dex can author the fix itself (the two cases below), so zero of them
   across hundreds of schema findings, with no `column_dropped`,
   `column_retyped` or `table_dropped` among the codes, usually means the
   baseline is behind the project rather than the warehouse having moved: every
@@ -199,7 +206,7 @@ is not described here.
   use, readers further downstream are named in `warnings`, and drift the project
   already reflects is advisory with a `maintain snapshot` hint.
 - **`advisory`** (grain, volume, semantic): a decision for the user, at most
-  backed by a test edit that makes the break visible in builds. dex cannot dedup
+  backed by a test edit that makes the break visible in builds. Dex cannot dedup
   a warehouse or decide whether a new `'refunded'` status belongs in a metric, so
   relay the decision rather than make it.
 - **A type change is advisory on every format.** The proposal names both

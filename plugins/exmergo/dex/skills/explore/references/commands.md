@@ -12,7 +12,7 @@ the file is broken enough that every other command refuses to start. The file is
 found the way every command finds it, by walking up to the git root.
 
 - `config validate` lists every problem by setting and line: syntax, a value the
-  schema refuses, a key dex does not read (with `suggestion`, the key it was
+  schema refuses, a key Dex does not read (with `suggestion`, the key it was
   probably meant to be), a key written twice, a key that reads as a credential.
   `fatal: true` marks the ones that stop every other command; the rest load and
   show up in every envelope's `warnings`. Any problem makes it an error, so it
@@ -39,14 +39,14 @@ found the way every command finds it, by walking up to the git root.
   key at a time. Per-run flags (`--connector`, `--budget`, `--scope`, ...) are
   refused, because they would change nothing in the file.
 - `config unset <key> [<key>...]` removes settings with the same edit and the
-  same `--confirm` handshake. It takes a key dex does not read, which is what a
+  same `--confirm` handshake. It takes a key Dex does not read, which is what a
   warning naming an unknown key asks you to remove, and a whole block (`bigqeury`
   left from a copy-paste). A block left with no keys goes too, with one of the
   blank lines that separated it. A key the file does not write is `ok` with
   `changed: false` and a note naming the nearest key it does write, which is
   usually the key you meant. A key inside one list item
   (`pii_overrides[0].reasn`) is refused, because a list changes as a whole: read
-  it with `config get pii_overrides`, which leaves out keys dex does not read, and
+  it with `config get pii_overrides`, which leaves out keys Dex does not read, and
   write it back with `config set`.
 - Both report `data.changes`, one row per value: `key`, `before` (absent for a
   new key), `after` (absent for a removed one), or only `withheld` for a value
@@ -362,7 +362,7 @@ element are omitted rather than null):
 ### `values <dimension>`
 
 Returns one dimension's value domain, which is what a `--where` filter may be
-filtered to, and on a hosted layer the only dex command that can reach it
+filtered to, and on a hosted layer the only Dex command that can reach it
 (`profile` cannot see a semantic dimension). A PII-flagged dimension refuses the
 command outright, because the whole output is values.
 
@@ -429,7 +429,7 @@ The backend comes from `.dex/config.yml` (`semantic.vendor` and
 `--api` override it. Those flags name **who executes**, and every result reports
 it as `execution` (`dex` or `vendor`).
 
-- `--local` renders SQL with MetricFlow and runs it through dex's own connector
+- `--local` renders SQL with MetricFlow and runs it through Dex's own connector
   and cost handshake. It needs a dbt project parsed at least once, and the
   `[semantic]` extra for `values` and `query` (`list` needs none). With that
   extra, `list` resolves the join graph, so its dimension lists are the tokens a
@@ -455,7 +455,7 @@ it as `execution` (`dex` or `vendor`).
   `--for-dimension` answer: a metric is a saved measure named `model.measure`,
   and a dimension token is `model.column`. `values` and `query` run locally
   with `execution: dex`: SLayer renders the SQL as a dry run, never opening a
-  datasource or reading a credential, and dex runs it through the same guards
+  datasource or reading a credential, and Dex runs it through the same guards
   as `--local` (PII gate, SELECT-only, relation pre-check, cost handshake,
   columnar cap). The `[semantic]` extra is not needed. What a query can say:
  - every metric in one query sits on one model, and an ad-hoc formula is
@@ -466,7 +466,7 @@ it as `execution` (`dex` or `vendor`).
     grain (`day`, `week`, `month`, ...), and a model with none refuses it;
  - `--where` is SLayer's filter syntax, not Jinja: `status = 'paid'`, read
     relative to the query's model, or a dotted column through a declared join.
-    A clause dex cannot read, or one carrying `{variable}` syntax, is refused;
+    A clause Dex cannot read, or one carrying `{variable}` syntax, is refused;
  - `--order-by` names one of the query's own metrics or grouped columns;
     write a descending one as `--order-by=-orders.revenue`, since with a space
     the leading `-` is read as a flag and refused.
@@ -475,7 +475,7 @@ it as `execution` (`dex` or `vendor`).
   model's own filters applied), or at the `--metric` model when one is named,
   in which case the dimension must be groupable for it. Connectors: DuckDB,
   BigQuery, Snowflake, Postgres, and Redshift; Databricks, ClickHouse and Trino
-  refuse with the reason. `--api` is refused, since dex reads no hosted SLayer.
+  refuse with the reason. `--api` is refused, since Dex reads no hosted SLayer.
 
 `dimension_scope` says whether a dimension row is one declaration or one
 groupable path, which is why two backends can report different dimension counts

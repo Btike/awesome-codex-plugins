@@ -48,14 +48,14 @@ exist.
 | `references` | `<model>.<column>`, a model, seed or snapshot the project has |
 | `evidence` | `request` (what the user asked for), `contract` (the project's declared columns, tests or metric filters), `precedent` (how sibling models decide the same thing), `data` (what profiling showed), `default` (the conventional analytics-engineering choice) |
 
-A field dex does not know is refused by name, so a typo cannot silently drop
+A field Dex does not know is refused by name, so a typo cannot silently drop
 part of a declaration.
 
 ## What it renders into
 
 The declaration is written into the model's **existing** YAML entry, wherever in
 the project it lives. A model with no entry gets one beside its SQL, named for
-it, which is where the scaffold puts one. dex never writes a second entry for a
+it, which is where the scaffold puts one. Dex never writes a second entry for a
 model, which dbt refuses.
 
 | Declared | Written as |
@@ -225,7 +225,7 @@ the post-change declaration, and what this plan changed between them.
 
 `preexisting: true` marks a rule that already disagreed before this plan and
 that this edit touches. `status: unchecked` (with `reason`, and no `stale`) is a
-rule the plan touched that dex could not read the SQL for: a macro or jinja
+rule the plan touched that Dex could not read the SQL for: a macro or jinja
 predicate, a function around the column (`lower(status) <> 'x'`), a subquery, a
 set operation, or a grain no key proves. It never claims the rule was removed.
 Comparison is on sqlglot's reading of the SQL, so a reformat, an alias rename,
@@ -236,6 +236,39 @@ predicate. Where attribution measured it (DuckDB, or `--attribute-rows` with the
 cost handshake on a billed connector), `row_delta` is its delta and the warning
 cites it; where it did not, the warning carries attribution's reason. Nothing
 here runs a query of its own, refuses a plan, or blocks apply.
+
+## Checked against the built relation
+
+`transform build --verify` and `maintain verify` hold each declaration to the
+relation dbt built, with aggregate-only statements (no row leaves the
+warehouse):
+
+| Declared | Finding | Severity |
+|---|---|---|
+| `grain` | `grain_broken`, `data.source: declaration`, with the duplicate count | high (low below `maintain.grain_min_rows`) |
+| `unit: fraction` with a value outside 0 to 1 | `unit_out_of_range`, with the observed `min` and `max` | medium |
+| `unit: percent` with every value within 0 to 1 | `unit_out_of_range`; a question rather than proof, since small percentages land here too | medium |
+| `additivity: additive` on a running total | `additivity_contradicted`, with the entity, the ordering column and the decrease fraction | medium |
+| `population.filters` value still present | `population_contradicted`, with the count of contradicting rows, never the rows | high |
+
+`null_rule: never` needs no check of its own: it renders as a `not_null` test,
+which the build runs. A single-column `grain` renders as a `unique` test, so the
+build path leaves it to that test; `maintain verify` ranks the declared grain
+first among its grain sources, so one model's grain is checked once.
+
+The additivity probe orders the column by the declaration's own entity and time
+columns: a composite grain naming both, else the `foreign_key` (or `key`) and
+`time` roles, else the relation's first id-shaped and temporal columns. Declare
+the roles where that guess would be wrong.
+
+A check that could not run is named in `data.suppressed` (`unit`, `additivity`,
+`population`, and `grain` on the build path) with the reason: nothing in scope
+declares it, the relation is empty, the column is all NULL, the column was
+aggregated away (a rollup cannot carry its population rule's column, so the rule
+is checked upstream or not at all), too few observations, or the scan is offered.
+A population filter's values are compared as text when the declared values and
+the column's type disagree. A unit's range is withheld for a column that looks
+like personal data.
 
 ## `data.decisions`
 

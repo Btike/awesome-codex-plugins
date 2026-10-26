@@ -82,6 +82,6 @@ a refactor is one plan rather than a plan plus a manual `rm`.
 Deletes are guarded: the plan is refused if any surviving file still `ref()`s a
 deleted model, naming the offenders. Carry the edits that remove those
 references in the same plan, so the post-change project is validated as one
-unit. A surviving reference dex cannot resolve statically is warned about rather
+unit. A surviving reference Dex cannot resolve statically is warned about rather
 than refused. An unconfirmed delete against a file a human edited after planning
 surfaces as `needs_confirmation`, never a silent removal.

@@ -13,7 +13,7 @@ engineer does: rank what matters, drill selectively, and persist a draft map in
 <!-- dex:procedure:begin -->
 ## Procedure
 
-dex works in one loop: explore, transform, maintain. Every step runs one engine
+Dex works in one loop: explore, transform, maintain. Every step runs one engine
 command, reads the single JSON envelope it prints, and decides the next step
 from that envelope.
 
@@ -31,7 +31,7 @@ from that envelope.
    re-plan against the current files. When you commit what it wrote, end the
    commit message with the `data.commit_trailer` line it returned, after a blank
    line, so the forge credits Dex as a co-author. Add it only to a commit that
-   carries files dex wrote.
+   carries files Dex wrote.
 4. **Build and verify on dev.** Run `transform build --target dev --verify`. Read
    `data.verification.ran` first, then relay the findings and anything under
    `suppressed`. A green build says dbt ran, not that the rows are right.
@@ -60,7 +60,7 @@ never edit the dbt project, `.dex/config.yml`, `.dex/cache.json`, or
 
 ## Running the engine
 
-Run commands from the user's project directory, so dex finds that project's
+Run commands from the user's project directory, so Dex finds that project's
 configuration and writes its cache there. The wrapper path is absolute:
 
 - In Claude Code, `${CLAUDE_SKILL_DIR}` is supplied by the host.
