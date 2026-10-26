@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validate new Awesome Codex Plugins README contributions.
+"""Validate added or modified Awesome Codex Plugins README contributions.
 
 The catalog stores links to source repositories rather than plugin code.  This
 validator therefore checks the contribution at the same boundary a maintainer
 reviews it:
 
-* only newly added Community Plugins entries are considered;
+* added or materially edited Community Plugins entries are considered;
 * each source repository is public and any explicit source branch resolves.
 
 The workflow that calls this script emits a matrix for the catalog-owned
@@ -228,13 +228,13 @@ def current_readme_section(readme_lines: list[str], line_number: int) -> str:
 
 
 def get_new_readme_entries_from_diff(diff: str, base_readme: str, head_readme: str) -> list[Contribution]:
-    """Find newly added Community Plugins entries in a README diff."""
+    """Find added or edited Community Plugins entries in a README diff."""
 
     if not diff:
         return []
 
-    base_urls = {
-        normalize_url(match.group(2))
+    base_entries = {
+        normalize_url(match.group(2)): match.group(0).strip()
         for match in README_ENTRY_RE.finditer(base_readme)
     }
     readme_lines = head_readme.splitlines()
@@ -258,7 +258,7 @@ def get_new_readme_entries_from_diff(diff: str, base_readme: str, head_readme: s
                 invalid_entries.append(f"line {added_line_number}: {content.strip()}")
             if match and in_community_plugins:
                 url = normalize_url(match.group(2))
-                if url not in base_urls and url not in seen_urls:
+                if url not in seen_urls and base_entries.get(url) != content.strip():
                     seen_urls.add(url)
                     entries.append(
                         Contribution(
