@@ -501,8 +501,12 @@ def main():
                 return 0
             print("  ❌ Failed to clear deferred notice")
             return 1
-        print("  Skipping: all matched repos are already owner-verified")
-        return 0
+        print("  Posting verified-owner dashboard notice...")
+        if post_comment(PR_AUTHOR, set()):
+            print("  ✅ Dashboard notice posted successfully")
+            return 0
+        print("  ❌ Failed to post dashboard notice")
+        return 1
 
     # 7. Post or replace the comment. Catalog-source repos are claimable
     # before the public Registry listing finishes indexing.

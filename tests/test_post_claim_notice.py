@@ -160,9 +160,16 @@ class ClaimNoticeTests(unittest.TestCase):
         self.assertEqual(MODULE.main(), 0)
         self.post.assert_called_once_with("author", {"owner/plugin"})
 
-    def test_verified_owner_does_not_receive_another_claim_invitation(self):
+    def test_verified_owner_receives_a_dashboard_confirmation(self):
         self.lookup.return_value = {"owner/plugin"}
         self.assertEqual(MODULE.main(), 0)
+        self.post.assert_called_once_with("author", set())
+
+    def test_verified_owner_deferred_notice_is_replaced_with_dashboard_link(self):
+        self.lookup.return_value = {"owner/plugin"}
+        self.existing.return_value = {"id": 123, "deferred": True}
+        self.assertEqual(MODULE.main(), 0)
+        self.update.assert_called_once_with(123, "author", set())
         self.post.assert_not_called()
 
     def test_existing_notice_prevents_duplicate_delivery(self):
