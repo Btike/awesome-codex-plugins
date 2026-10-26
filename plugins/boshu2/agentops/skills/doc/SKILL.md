@@ -14,13 +14,6 @@ produces:
 context_rel: []
 skill_api_version: 1
 user-invocable: true
-context:
-  window: fork
-  intent:
-    mode: task
-  sections:
-    exclude:
-    - HISTORY
 metadata:
   capabilities: [doc, initialize_missing_docs, write_session_handoff]
   effects: [write_documentation, write_requested_handoff, create_requested_evidence_directory]
@@ -40,7 +33,7 @@ coverage ledger or separate report. Select only the mode relevant to the task.
 
 | Need | Scope and reference |
 |---|---|
-| Explain an API, command, code-map or architecture | Inspect its consumers and source; use [code/API guidance](references/default-mode.md) or [architecture guidance](references/architecture-report.md) when useful. |
+| Explain an API, command, code-map or architecture | Inspect its consumers and source; use [code/API guidance](references/default-mode.md) or the [codebase report](references/architecture-report.md) when useful. |
 | Create or improve a README | Lead with the user's problem and a working first-use path; preserve useful depth. See [README craft](references/readme-craft.md). |
 | Check an advertised install, upgrade or first-success path | Follow the selected package and current instructions in an authorized disposable environment. See [developer journey](references/developer-journey.md). |
 | Audit or scaffold OSS documentation | Compare existing docs with the requested pack. Create missing files; revise existing files only within the authorized request. See [OSS pack](references/oss-pack.md). |
@@ -53,6 +46,16 @@ These are optional task shapes, not successive phases. Detailed references
 supply techniques and formats; they do not add interviews, approval checkpoints,
 reports or files beyond the accepted request. Existing authorization to revise
 specified documents is sufficient.
+
+`<skill-dir>` is the directory that contains this SKILL.md. Claude Code shows it
+as "Base directory for this skill"; Codex lists this skill's SKILL.md path; in
+an AgentOps source checkout it is `skills/doc`. Replace `<skill-dir>` with that
+absolute path before running a command. The working directory stays the user's
+repository. If the host did not show where this skill is installed, use the
+directory of the SKILL.md you read. If you cannot determine it, do not guess a
+path or run a same-named script from the current repository; say the bundled
+script is unavailable and compare the repository's documentation files with the
+requested pack by hand.
 
 ## Grounded writing
 
@@ -120,7 +123,7 @@ record a caller's unobserved claim as "stated, unverified", never as fact.
 - Failed or withdrawn: <attempt> -> <observed failure or reason> | none
 - Decisions and constraints: <choice or limit> (<caller's | writer's>, <source>); rejected: <alternative> -> <reason> | none
 - Open: <unmet acceptance, findings, causal gaps> | none known
-- Stop state: <native state and where it was read> | unknown
+- Stop state: <state read from its native owner, and where> | unknown (a HOLD or paused note is the caller's note, not state)
 - Remaining allowance: <measured time, cost or turns left; helper use for the current incident when it matters> | unknown
 - Identities: <repository and commit; runtime, session or context IDs and resume links as observed> | unknown
 - Selected skills: <skills the caller selected by name for this work> | none
@@ -146,17 +149,15 @@ record a caller's unobserved claim as "stated, unverified", never as fact.
   for startup and resume links; end-state notes cannot replace missing startup
   evidence.
 
-**Destination.** A new CDLC handoff, draft or proof goes only to the selected
-protected external non-Git destination; with none selected, report the missing
-routing and create no fallback file. For any other handoff a location the
-caller names wins: write there, read it back and return the exact path, and say
-so if the receiving context may not reach it. Never replace a handoff already
-there unless asked: create the file exclusively (no check-then-write) and on a
-taken name use the next free numeric suffix. With no named location, return the
-handoff in the response and create no file. Check source, recipient/model and
-destination authorization before copying metadata; an opaque locator grants no access.
-AgentOps evidence routing and the `ao session` handoff commands are in
-[AgentOps internals](references/agentops-internal.md).
+**Destination.** A location the caller names wins: write there, read it back
+and return the exact path, and say so if the receiving context may not reach
+it. Never replace a handoff already there unless asked: create the file
+exclusively (no check-then-write) and on a taken name use the next free numeric
+suffix. With no named location, return the handoff in the response and create no
+file. Check source, recipient/model and destination authorization before copying
+metadata; an opaque locator grants no access. For AgentOps itself, its
+destination precedence, evidence routing and `ao session` handoff commands in
+[AgentOps internals](references/agentops-internal.md) apply first.
 
 Writing a handoff changes no tracker, Git, runtime or verdict state. The native
 caller keeps owning the authorized outcome; this mode does not select work or
@@ -165,9 +166,10 @@ decide continuation for it.
 ### Resume from a handoff
 
 Read the handoff the caller selected. If the caller named none, use the most
-recent handoff for the current branch and say which one you used. With several
-plausible candidates, or one from another branch or repository, list them and
-ask. Check the handoff against current state before relying on it: the
+recent one you can find for the current branch (in AgentOps, `ao session
+rehydrate` searches its handoff stores) and say which; with none, ask. With
+several plausible candidates, or one from another branch or repository, list
+them and ask. Check the handoff against current state before relying on it: the
 repository, branch and commit it names; the native tracker or runtime state;
 and files it points to. Name every mismatch.
 
@@ -186,10 +188,8 @@ other. Wait for the caller before acting on anything hard to undo.
 Load these only for the document being written. They supply examples and
 techniques under the kernel's accepted scope, not additional workflow gates.
 
-- Formats and examples: [generation templates](references/generation-templates.md), [project types](references/project-types.md).
 - OSS scope: [documentation tiers](references/oss-documentation-tiers.md), [OSS project types](references/oss-project-types.md).
 - Writing and checks: [prose workmanship](references/prose-and-report-workmanship.md) (cleanup, learner order, diagrams, one live statement), [validation techniques](references/validation-rules.md).
 - After a change: [change-driven docs](references/change-driven-docs.md) for doc drift, reader-need coverage and change descriptions.
 - Explicit context configuration: [context routing](references/bootstrap/context-routing.md).
-- Behavior scenarios: [documentation](references/doc.feature), [README](references/readme.feature), [OSS pack](references/oss-docs.feature).
 - AgentOps itself (vocabulary, evidence routing, handoff commands): [AgentOps internals](references/agentops-internal.md).

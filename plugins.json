@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
-  "last_updated": "2026-10-25",
-  "total": 336,
+  "last_updated": "2026-10-26",
+  "total": 335,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -1080,6 +1080,16 @@
       "install_url": "https://raw.githubusercontent.com/Cassette-Editor/oh-my-cassette/HEAD/.codex-plugin/plugin.json"
     },
     {
+      "name": "oh-my-openspec",
+      "url": "https://github.com/alexeyco/oh-my-openspec",
+      "owner": "alexeyco",
+      "repo": "oh-my-openspec",
+      "description": "Spec-driven development workflow for Codex CLI and OpenCode, with planning, parallel task execution, and mechanical OpenSpec validation.",
+      "category": "Development & Workflow",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/alexeyco/oh-my-openspec/HEAD/plugins/oh-my-openspec/.codex-plugin/plugin.json"
+    },
+    {
       "name": "Ontoly",
       "url": "https://github.com/0xsarwagya/ontoly-codex-plugin",
       "owner": "0xsarwagya",
@@ -1398,16 +1408,6 @@
       "category": "Development & Workflow",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/Qabbout/stacked-prs-skill/HEAD/.codex-plugin/plugin.json"
-    },
-    {
-      "name": "Staff Engineer Mode",
-      "url": "https://github.com/sirmarkz/staff-engineer-mode",
-      "owner": "sirmarkz",
-      "repo": "staff-engineer-mode",
-      "description": "Routes engineering design, delivery, reliability, security, operations, and maintenance prompts to focused staff-level specialist guidance for AI coding agents.",
-      "category": "Development & Workflow",
-      "source": "awesome-codex-plugins",
-      "install_url": "https://raw.githubusercontent.com/sirmarkz/staff-engineer-mode/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Stark",
@@ -1909,16 +1909,6 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/avivsinai/bitbucket-cli/HEAD/.codex-plugin/plugin.json"
-    },
-    {
-      "name": "BountyGuard",
-      "url": "https://github.com/doomsday-network/bounty-guard",
-      "owner": "doomsday-network",
-      "repo": "bounty-guard",
-      "description": "Pre-flight GitHub bounty security scanner and on-chain Proof-of-Escrow MCP verifier that classifies open bounties before AI agents invest compute.",
-      "category": "Tools & Integrations",
-      "source": "awesome-codex-plugins",
-      "install_url": "https://raw.githubusercontent.com/doomsday-network/bounty-guard/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Build Remote Agent",

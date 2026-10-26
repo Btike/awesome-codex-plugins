@@ -1594,6 +1594,21 @@
       "icon": "./plugins/Cassette-Editor/oh-my-cassette/assets/logo-400.png"
     },
     {
+      "name": "oh-my-openspec",
+      "displayName": "oh-my-openspec",
+      "source": {
+        "source": "local",
+        "path": "./plugins/alexeyco/oh-my-openspec"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Spec-driven development workflow for Codex CLI and OpenCode, with planning, parallel task execution, and mechanical OpenSpec validation.",
+      "icon": "./plugins/alexeyco/oh-my-openspec/assets/icon.svg"
+    },
+    {
       "name": "ontoly",
       "displayName": "Ontoly",
       "source": {
@@ -2065,21 +2080,6 @@
       "category": "Development & Workflow",
       "description": "Agent skill for Claude Code and Codex to split large changes into reviewable PRs, carry fixes through dependent branches, and land them in dependency order with automated Git checks.",
       "icon": "./plugins/Qabbout/stacked-prs-skill/assets/icon.svg"
-    },
-    {
-      "name": "staff-engineer-mode",
-      "displayName": "Staff Engineer Mode",
-      "source": {
-        "source": "local",
-        "path": "./plugins/sirmarkz/staff-engineer-mode"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Development & Workflow",
-      "description": "Routes engineering design, delivery, reliability, security, operations, and maintenance prompts to focused staff-level specialist guidance for AI coding agents.",
-      "icon": "./plugins/sirmarkz/staff-engineer-mode/assets/icon.png"
     },
     {
       "name": "stark",
@@ -2816,21 +2816,6 @@
       "category": "Tools & Integrations",
       "description": "Manage Bitbucket repos, PRs, branches, issues, webhooks, and pipelines for Data Center and Cloud.",
       "icon": "./plugins/avivsinai/bitbucket-cli/assets/bkt-icon.svg"
-    },
-    {
-      "name": "bounty-guard",
-      "displayName": "BountyGuard",
-      "source": {
-        "source": "local",
-        "path": "./plugins/doomsday-network/bounty-guard"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Tools & Integrations",
-      "description": "Pre-flight GitHub bounty security scanner and on-chain Proof-of-Escrow MCP verifier that classifies open bounties before AI agents invest compute.",
-      "icon": "./plugins/doomsday-network/bounty-guard/assets/icon.svg"
     },
     {
       "name": "build-remote-agent",
