@@ -392,6 +392,21 @@
       "description": "Agentic Bethesda Game Studio modpack curation toolkit with MCP-driven xEdit conflict audit, MO2 control plane, BA2/BSA and Papyrus tooling, and skills for setup, dev-log, and release-changelog workflows."
     },
     {
+      "name": "bindry",
+      "displayName": "Bindry",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bindryai/Plugins"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Compiles public or workspace Binders into version-pinned agent skills, checks instruction drift, and supports optional MCP-based live mode.",
+      "icon": "./plugins/bindryai/Plugins/assets/icon.svg"
+    },
+    {
       "name": "boss",
       "displayName": "Boss",
       "source": {

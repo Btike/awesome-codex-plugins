@@ -1,4 +1,4 @@
-﻿# Digital Marketing Pro
+# Digital Marketing Pro
 
 > **Your agency just signed a 50-brand client. The previous agency left no playbook. Three brands are bleeding budget, two have stale positioning, one is launching in a regulated jurisdiction next month. Where do you start?**
 
@@ -6,22 +6,23 @@ Run `/digital-marketing-pro:engagement` against each brand. Same 12-Part Strateg
 
 Open-source AI marketing plugin — **164 skills, 24 specialist agents, EU AI Act Article 50 ready, Cowork team-persistent**. Built for marketing agencies, in-house teams running 50–200 brands, and consultancies. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-3.35.8-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.37.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/digital-marketing-pro?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/digital-marketing-pro/stargazers)
-[![Tests](https://img.shields.io/badge/tests-700%2F700%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-769%2F769%20passing-brightgreen.svg)](tests/)
 [![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#works-on-40-agent-harnesses-via-the-agent-skills-open-standard)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](skills/context-engine/compliance-rules.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v3.35.8 (October 12, 2026):** the command that returns autopilot to propose-only works from any folder, and the script checks cover new folders by default. [What's new](#whats-new) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v3.37.1 (October 27, 2026):** every jurisdiction in the compliance rules re-read at its source (the UAE's "AED 20 million" fine and Saudi Arabia's localisation rule turned out not to exist), TikTok's 1 January 2027 cutoff for legacy campaign creation, and no agent pinned to a model. [What's new](#whats-new) · [Changelog](CHANGELOG.md)
 
 ```bash
-# Install — one line
-/plugin marketplace add indranilbanerjee/neels-plugins
-/plugin install digital-marketing-pro@neels-plugins
+# Install — one command (Claude Code 2.1.292 or newer)
+claude plugin install digital-marketing-pro --marketplace indranilbanerjee/neels-plugins
 ```
+
+Older Claude Code, or inside a session: `/plugin marketplace add indranilbanerjee/neels-plugins`, then `/plugin install digital-marketing-pro@neels-plugins`.
 
 > If this saves you time, [give it a star ⭐](https://github.com/indranilbanerjee/digital-marketing-pro/stargazers) — it's the single thing that helps other marketers find it.
 
@@ -94,6 +95,14 @@ That's it. You never touched a command line. Your team Drive will hold the outpu
 ## Quick start
 
 ### 1. Install on Claude Code (canonical)
+
+One command from your terminal (Claude Code 2.1.292 or newer; it adds the marketplace if needed):
+
+```bash
+claude plugin install digital-marketing-pro --marketplace indranilbanerjee/neels-plugins
+```
+
+Older Claude Code, or inside a session, takes two steps:
 
 ```bash
 /plugin marketplace add indranilbanerjee/neels-plugins
@@ -195,7 +204,7 @@ Other marketing plugins exist, including Anthropic's own marketing plugin and co
 | AEO / GEO | **A 6-platform audit, including Google AI Mode** |
 | Where it runs | **9 native hosts**: Claude Code, Cowork, Codex, Cursor, Copilot CLI, Antigravity, Hermes, OpenClaw, Grok |
 | Live-write safety | **Single-use approval record for writes it sends itself; MCP writes: typed yes + host prompt** |
-| Tests | **700 stdlib unittest** tests |
+| Tests | **769 stdlib unittest** tests |
 | License | **MIT: no telemetry, no seats** |
 
 ---
@@ -292,11 +301,11 @@ Output: HTTP calls for the 8 executable connectors (Slack, HubSpot, Klaviyo, Sen
 
 ---
 
-## Supported surfaces (v3.35.8)
+## Supported surfaces (v3.37.1)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
-| **Claude Code** CLI + IDE extensions | `/plugin install digital-marketing-pro@neels-plugins` | `.claude-plugin/plugin.json` | Full support (canonical) |
+| **Claude Code** CLI + IDE extensions | `claude plugin install digital-marketing-pro --marketplace indranilbanerjee/neels-plugins` (2.1.292+), or `/plugin marketplace add indranilbanerjee/neels-plugins` then `/plugin install digital-marketing-pro@neels-plugins` | `.claude-plugin/plugin.json` | Full support (canonical) |
 | **Anthropic Cowork** | Plugins UI → Add marketplace → `indranilbanerjee/neels-plugins` → Install | same `.claude-plugin/` files | Full support — no `/plugin` slash commands in Cowork (UI-only) |
 | **OpenAI Codex** CLI + IDE + App | `codex plugin marketplace add indranilbanerjee/neels-plugins` then `codex plugin add digital-marketing-pro@neels-plugins` | `.codex-plugin/plugin.json` (published OpenAI schema) | Full skills + MCP support |
 | **Cursor 2.5+** | In any Cursor Agent chat: `/add-plugin digital-marketing-pro@https://github.com/indranilbanerjee/digital-marketing-pro` | `.cursor-plugin/plugin.json` (published Cursor JSON Schema) | Full skills + agents + commands support |
@@ -404,17 +413,17 @@ If you run into a platform-specific install snag, file a [GitHub issue](https://
 
 ## What's new
 
-### v3.35.8 — the propose-only command works from any folder (October 12, 2026)
+### v3.37.1 — compliance rules re-read at the source, TikTok's Smart+ cutoff (October 27, 2026)
 
-From the fresh-install smoke test's recheck. PRIVACY.md's command for returning autopilot to propose-only used a relative `scripts/` path that fails from your own project; it now uses the plugin's folder. The check that every script-running file says where the scripts are now covers every document by default instead of a list of folders. Printed commands carry no text after them, so a PowerShell note never swallows it, and a test confirms no script waits for input on Claude Code's open stdin pipe. 700 tests.
+The eleven jurisdictions 3.36.1 had marked "pending re-check" were re-read against the law and the regulator's own pages, and every one now carries a dated stamp naming its sources. Three had real errors. The UAE's "up to AED 20 million" fine has no basis: the law leaves penalties to a Cabinet decision that has not been issued, and it has no legitimate-interest basis. Saudi Arabia has no data-localisation rule in force; an October 2026 draft would add one. Thailand's "sender identification" and "Thai-language notices" are not in its law. Colorado's new automated decision-making law was read in its signed text, and Connecticut's outright ban on targeting minors confirmed. From 1 January 2027 TikTok's API stops creating legacy manual Sales, App Promotion and Lead Generation campaigns; the paid-advertising guidance and the launch template now use the Upgraded Smart+ flow, and a test fails 30 days before any vendor cutoff a template still depends on. The quality-assurance agent no longer pins a model, and `run_all.py --help` prints its usage instead of running the suite. 769 tests.
 
-### v3.35.7 — errors exit non-zero; commands paste into Git Bash (October 12, 2026)
+### v3.37.0 — Google's crawler tokens, Cloudflare, Bing citation gaps, Preferred Sources (October 27, 2026)
 
-From the fresh-install smoke test's recheck. Fifteen scripts printed an error and exited 0, so a caller checking `$?` read a failure as success: utm-generator (a missing CSV, or a CSV where every row failed), the SEO and local-SEO auditors, the budget, ROI and lifetime-value calculators, the scorers and others. A bad argument now exits 2 and a failure 1; utm-generator exits 3 for a partly failed batch, as its `--help` says. Printed commands use forward slashes, so they run in Git Bash (Claude Code's Bash tool on Windows) as well as PowerShell. 694 tests.
+The agent-readiness audit now checks Google's user-triggered fetchers, Google-Agent and Google-GeminiNotebook, and warns when robots.txt still names the retired Google-NotebookLM token; the public standalone version of the audit carries the same change. Since 15 September, Cloudflare's "Block" setting also stops Googlebot, Bingbot and Applebot, so the readiness and technical-SEO audits now check the CDN, not just robots.txt. The AI-visibility skills use Bing's new Topics Portfolio, the first first-party list of queries where competitors get cited and you don't. They explain Google's Search Console opt-out for AI features (not a ranking signal, but it costs every AI impression) and add a Preferred Sources step. 759 tests.
 
-### v3.35.6 — quoted paths, BOM-safe inputs, hints that run anywhere (October 12, 2026)
+### v3.36.2 — model registry refreshed, with date checks (October 27, 2026)
 
-From the fresh-install smoke test's final pass. Five skill commands ran an unquoted `${CLAUDE_PLUGIN_ROOT}` path, which breaks in a folder with a space; every such path is now quoted and a test checks them all. `utm-generator.py --csv` turned Excel's "CSV UTF-8" export into rows of missing URLs (still exiting 0), and `--prepare-batch` refused a plan saved by PowerShell; every script now reads files with or without a BOM and never writes one. Printed hints run a script by the interpreter and its absolute path. 680 tests.
+The registry that maps aliases like `latest-fast-anthropic` to real model ids, shared by all three plugins, was refreshed from Anthropic's, OpenAI's and Google's own pages. The fast Claude alias now points to Haiku 5.5, Google's text alias to Gemini 4 Argon and its balanced image alias to Nano Banana 2.1; gpt-4o and gpt-4o-mini are marked for their 14 January 2027 shutdown. Gemini 2.5 turned out not to be deprecated, and one entry had mistaken a release date for a shutdown. A new test fails whenever an alias points at a deprecated model, a live model passes its retirement date unchecked, or the docs' alias table drifts, and the parameter scan now covers every Claude model, since Anthropic's newest API version rejects `temperature` everywhere. 753 tests.
 
 Older releases are in [CHANGELOG.md](CHANGELOG.md).
 
@@ -515,7 +524,7 @@ Every skill answers to `/digital-marketing-pro:<skill-name>`. Five more are stan
 
 Every other skill works the same way — `:competitor-monitor`, `:churn-risk`, `:autopilot-status`, `:agency-dashboard`, `:aeo-audit`, `:geo-monitor`, `:c2pa-metadata`, `:client-onboarding`, `:journey-design` … see `/digital-marketing-pro:help` after install for the full list, or browse `skills/` in the repo.
 
-### 95 Python scripts (optional)
+### 96 Python scripts (optional)
 Plugin works fully without Python — all marketing knowledge, frameworks, agent capabilities, and skills work out of the box via the 177 reference knowledge files.
 
 | Mode | Size | Adds |
@@ -529,7 +538,7 @@ Notion · Slack · Canva · Figma · HubSpot · Amplitude · Ahrefs · SimilarWe
 
 These are an **opt-in catalog** — no `.mcp.json` ships (it is gitignored), so nothing auto-connects; enable only the ones you need. All HTTP, all Cowork-compatible. For services without first-party HTTP MCPs (Google Sheets, Drive, Salesforce, etc.), see `.mcp.json.connectors-reference` for **Pipedream / Composio / Zapier / Make.com** aggregator paths.
 
-For the extended stdio catalog (Google Ads, Meta Ads, GA4, GSC, Brevo, etc. via npx, Claude Code only — not Cowork-compatible; verify each npm package exists before use, npx runs remote code): `cp .mcp.json.example .mcp.json`. See [CONNECTORS.md](CONNECTORS.md) and [Integrations Guide](docs/integrations-guide.md).
+Connector setup offers only vendor-verified, version-pinned packages: `.mcp.json.example` has runnable `npx` entries only for packages the vendor itself publishes on npm (Pinecone, DataForSEO, DeepL), pinned to an exact version and checked weekly against the npm registry. Every other service uses the vendor's hosted HTTP server or is set up from the vendor's own docs; DMP prints no `npx` command for it. See [CONNECTORS.md](CONNECTORS.md) and [Integrations Guide](docs/integrations-guide.md).
 
 ---
 
@@ -614,8 +623,8 @@ Frontier models change every ~6 weeks. Hardcoding `claude-sonnet-4-5-20250929` o
 Every script that calls a provider model now accepts `--model` (or `--openai-model` / `--anthropic-model` for `scripts/ai-visibility-checker.py`) and the value is validated against the registry. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md) for the full alias map, curation policy, and worked examples.
 
 ```bash
-python scripts/resolve_model.py --alias latest-balanced-anthropic    # -> claude-sonnet-4-6
-python scripts/resolve_model.py --check gemini-2.0-flash              # -> retired (auto-routes to gemini-3.5-flash)
+python scripts/resolve_model.py --alias latest-balanced-anthropic    # -> claude-sonnet-5-5
+python scripts/resolve_model.py --check gpt-4o                        # -> deprecated (shutdown 2027-01-14; falls forward to gpt-6-luna)
 python scripts/resolve_model.py --list --vendor anthropic --status current
 python scripts/refresh_models.py                                      # drift report (needs API keys)
 ```
@@ -638,7 +647,7 @@ DM Pro carries jurisdiction-specific compliance rules that auto-apply when a bra
 - NY synthetic-performer disclosure law (live June 2026, $1K–$5K per violation, $10K repeat) — applies to synthetic influencers + AI endorsements
 - FTC May 2026 endorsement guidance — synthetic influencers, AI testimonials, AI-edited creator content
 - CJEU March 2026 ruling — pseudonymized cookie IDs are personal data when re-identification is feasible
-- CCPA Jan 2026 ADMT amendments + AI-derived sensitive data classification
+- CCPA ADMT regulations (in effect 1 Jan 2026; ADMT compliance from 1 Jan 2027) + AI-derived sensitive data classification
 - DPDP Phase II preparation — consent manager registration opens Nov 2026
 
 ---
@@ -715,7 +724,7 @@ Yes. Each brand has its own `~/.claude-marketing/brands/<brand-slug>/` directory
 Skip to `/digital-marketing-pro:campaign-plan`. Every individual surface (campaign / SEO / content / competitor / email / report) is independently runnable. The full engagement is the canonical path, not the only path.
 
 **Q: Will this work on Codex / Cursor / Copilot CLI / Antigravity?**
-Yes — verified-real native manifests ship for all 9 surfaces (CC, Cowork, Codex, Cursor, Copilot CLI, Antigravity, Hermes Agent, OpenClaw, Grok). See [Supported surfaces](#supported-surfaces-v3358) above for per-platform install commands.
+Yes — verified-real native manifests ship for all 9 surfaces (CC, Cowork, Codex, Cursor, Copilot CLI, Antigravity, Hermes Agent, OpenClaw, Grok). See [Supported surfaces](#supported-surfaces-v3371) above for per-platform install commands.
 
 **Q: I run my team on Anthropic Cowork. Does brand state persist between sessions?**
 Yes — but you need to run `/digital-marketing-pro:cowork-setup` once per team first (v3.12.0). Cowork's per-session filesystem is ephemeral, and `${CLAUDE_PLUGIN_DATA}` is too ([open issue #51398](https://github.com/anthropics/claude-code/issues/51398)). The setup wizard routes brand profiles + plans + reports through a Google Drive MCP so everything survives across sessions and is shared across the team. Multi-team isolation via per-team folder names.
@@ -788,7 +797,7 @@ Use the direct repo form: `grok plugin install indranilbanerjee/digital-marketin
 ### General (any platform)
 
 **"Tests in `tests/` fail when I `git clone` locally"**
-Run `python tests/run_all.py` from the repo root. All 700 tests are stdlib-only — no `pip install` needed. If they fail, the most likely cause is a Python version mismatch (DMP supports Python 3.10+) or a clone that omitted some `skills/` subdirectories. Try `git clone --depth=1` again.
+Run `python tests/run_all.py` from the repo root. All 769 tests are stdlib-only — no `pip install` needed. If they fail, the most likely cause is a Python version mismatch (DMP supports Python 3.10+; `scripts/setup.py` recommends 3.11 or newer, and the floor moves to 3.11 once Claude's Cowork environment does) or a clone that omitted some `skills/` subdirectories. Try `git clone --depth=1` again.
 
 **"`/digital-marketing-pro:doctor` shows my action as stub_unconfigured"**
 That action needs an MCP connector configured. Run `python scripts/connector-status.py --action setup-guide --name <connector-name>` for the exact setup snippet. Add it to your `.mcp.json` under `mcpServers`, restart your agent, and the action becomes `manifest_ready`. See [Connector-aware action resolver](#connector-aware-action-resolver) for the full readiness model.
@@ -844,6 +853,8 @@ DM Pro is part of a three-plugin suite by [Indranil Banerjee](https://indranil.i
 /plugin install contentforge@neels-plugins
 /plugin install socialforge@neels-plugins
 ```
+
+On Claude Code 2.1.292 or newer, each is one terminal command: `claude plugin install <name> --marketplace indranilbanerjee/neels-plugins`.
 
 ---
 

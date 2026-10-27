@@ -227,7 +227,7 @@ It refreshes the marketplace and updates the plugin in Claude Code and Codex; th
 | **Claude Desktop, one-click extension** | Download `codex-claude-council-<version>.mcpb` from the [latest release](https://github.com/hamza-aziz-ai/codex-claude-council/releases/latest) and open it (or **Settings → Extensions → Install Extension…**). It adds the MCP server to Claude Desktop; the Codex and Claude Code CLIs still need to be installed and signed in. |
 | **Claude Desktop, Chat tab** | `npx -y codex-claude-council install --claude-desktop --only claude`, then fully quit and reopen Claude Desktop |
 | **ChatGPT desktop app** | **Settings → Plugins → Add → + Add a marketplace**, enter `https://github.com/hamza-aziz-ai/codex-claude-council.git` in **Source**, click **Add marketplace**, then install **codex-claude-council** |
-| **claude.ai, ChatGPT on the web, phones** | Run `npx -y codex-claude-council serve` and connect over HTTPS: see [Use it online](#use-it-online-claudeai-chatgpt-your-phone) |
+| **claude.ai, ChatGPT on the web, phones** | Run `npx -y codex-claude-council serve --tunnel` and add the URL it prints as a connector: see [Use it online](#use-it-online-claudeai-chatgpt-your-phone) |
 | **Any other MCP client** (Cursor, VS Code, Windsurf, …) | Add a local (stdio) MCP server with command `npx` and arguments `["-y", "codex-claude-council", "mcp"]` (config below). It is also listed in the [MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.hamza-aziz-ai/codex-claude-council) as `io.github.hamza-aziz-ai/codex-claude-council` and on [Smithery](https://smithery.ai/servers/hamza-aziz-ai/codex-claude-council) |
 
 For a client configured with JSON (Cursor's `mcp.json`, Windsurf, Claude Desktop's `claude_desktop_config.json`, …), paste:
@@ -248,55 +248,46 @@ For a client configured with JSON (Cursor's `mcp.json`, Windsurf, Claude Desktop
 
 ### Use it online: claude.ai, ChatGPT, your phone
 
-Apps on the web and on phones connect to MCP servers over HTTPS, from their providers' servers, so they can't start a local one. `serve` runs the council's MCP server over HTTP instead, on your computer, with your CLIs and plans as always:
+Apps on the web and on phones connect to MCP servers over HTTPS, from their providers' servers, so they can't start a local one. `serve --tunnel` puts the council's MCP server online from your computer, with your CLIs and plans as always. It needs [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) (Windows: `winget install Cloudflare.cloudflared`, macOS: `brew install cloudflared`) and no Cloudflare account:
 
 ```bash
-npx -y codex-claude-council serve
+npx -y codex-claude-council serve --tunnel
 ```
 
-It prints the server's address, `http://127.0.0.1:8000/mcp/<token>`. The token is a secret generated on the first start and saved next to your config file (`serve-token`), so the address stays the same; set `--token` or `COUNCIL_TOKEN` to choose your own. Options: `--port` (default 8000) and `--host` (default `127.0.0.1`: this computer only).
-
-To reach it from the internet, put HTTPS in front of it, for example a [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/), in a second terminal:
-
-```bash
-cloudflared tunnel --url http://127.0.0.1:8000
-```
-
-It prints an address like `https://<random words>.trycloudflare.com`. Add `https://<that host>/mcp/<token>` as a custom connector, with no authentication:
+It prints the URL, `https://<random words>.trycloudflare.com/mcp/<token>`. Add it as a custom connector, with no sign-in:
 
 | App | Where |
 |---|---|
-| **claude.ai** (and the Claude apps on your phone) | **Settings → Connectors → Add custom connector** |
-| **ChatGPT** | Turn on developer mode (**Settings → Apps → Advanced settings**), then create a connector with that URL |
-| **Any other MCP client** | Add a remote MCP server with that URL (Streamable HTTP) |
+| **claude.ai** (and the Claude apps on your phone) | **Settings → Connectors → Add custom connector**: a name, the URL, then **No sign-in** |
+| **ChatGPT** | Turn on developer mode (**Settings → Apps → Advanced settings**), then create a connector with the URL |
+| **Any other MCP client** | Add a remote MCP server with the URL (Streamable HTTP) |
 
-- **Keep the URL secret.** The token in it is the only key: anyone with the URL can run the council on your computer, under your plans, and the members can read your files. A tunnel URL of the quick kind changes each time `cloudflared` starts (update the connector), or set up a named tunnel for a fixed one.
-- **Your computer stays the server.** It must be on, with `serve` and the tunnel running. Questions about a project need its folder on this computer: name it in the question ("in the project at `~/code/app`").
+- **Keep the URL secret.** The token in it is the only key: anyone with the URL can run the council on your computer, under your plans, and the members can read your files. The token is generated on the first start and saved next to your config file (`serve-token`); delete that file for a new one, or set `--token` / `COUNCIL_TOKEN`.
+- **The address changes** each time `serve --tunnel` starts (a Cloudflare quick tunnel); update the connector then. For a fixed address, run `serve` without `--tunnel` and put your own [named tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) or reverse proxy in front of `http://127.0.0.1:8000`.
+- **Your computer stays the server.** It must be on, with `serve` running. Questions about a project need its folder on this computer: name it in the question ("in the project at `~/code/app`").
+- **Options:** `--port` (default 8000), `--host` (default `127.0.0.1`: this computer only). Without `--tunnel`, `serve` prints the local address, `http://127.0.0.1:8000/mcp/<token>`.
 - Each request gets one answer, without progress notifications; a tool call still returns within `tool_wait_seconds`, and the app calls `council_result` until the answer is ready.
 
 #### On a server of your own (Docker)
 
-To keep it online without your computer, run it on a server you control (a VPS, a home server) with this repository's `Dockerfile`: Node.js, both CLIs and `serve`. It is still your council, on your plans: sign both CLIs in with your own accounts, for your own use.
+To keep it online without your computer, run the ready-made image on a server you control (a VPS, a home server; amd64 or arm64): Node.js, both CLIs, cloudflared and `serve`. It is still your council, on your plans: sign both CLIs in with your own accounts, for your own use.
 
 ```bash
-git clone https://github.com/hamza-aziz-ai/codex-claude-council.git
-docker build -t codex-claude-council codex-claude-council
 docker run -d --name council --restart unless-stopped \
   --security-opt seccomp=unconfined \
-  -p 127.0.0.1:8000:8000 \
   -v council-home:/home/node \
   -v ~/code:/projects:ro \
-  codex-claude-council
+  ghcr.io/hamza-aziz-ai/codex-claude-council serve --tunnel
 docker exec -it council codex login --device-auth   # Sign in with ChatGPT, on any device
 docker exec -it council claude auth login           # open the link, paste the code back
-docker logs council                                 # the URL, with its token
+docker logs council                                 # the URL to add as a connector
 ```
 
 - **`--security-opt seccomp=unconfined`**: Codex's read-only sandbox (bubblewrap) needs user namespaces, which Docker's default seccomp profile blocks; without it, Codex can't run any command. If Codex still reports that bubblewrap can't create a namespace, add `--security-opt apparmor=unconfined` too.
 - **The `council-home` volume** keeps the sign-ins, your config, skills and the token across restarts and new images. To use your own token, add `-e COUNCIL_TOKEN=<secret>`.
 - **Projects:** mount the folders the council should read, read-only, and name them in the question ("in the project at `/projects/app`").
-- **HTTPS:** the port is open on the server itself only (`127.0.0.1`). Put a tunnel (`cloudflared tunnel --url http://127.0.0.1:8000`) or a reverse proxy with a certificate (such as Caddy) in front, then add `https://<your host>/mcp/<token>` as a connector, as above.
-- **Update:** `git pull`, build again, then `docker rm -f council` and the same `docker run`; the volume keeps everything.
+- **A fixed address:** the quick tunnel's address changes when the container restarts (`docker logs council` shows the new one). Instead, leave out `serve --tunnel` and add `-p 127.0.0.1:8000:8000`: the server then listens on the server's port 8000, for your own named tunnel or reverse proxy with a certificate (such as Caddy) in front; the URL is `https://<your host>/mcp/<token>`, with the token from `docker logs council`.
+- **Update:** `docker pull ghcr.io/hamza-aziz-ai/codex-claude-council`, then `docker rm -f council` and the same `docker run`; the volume keeps everything. Each release is also tagged with its version, such as `:0.15.0`. To build the image yourself, `docker build -t codex-claude-council .` in a clone of this repository.
 
 ## Use it
 
