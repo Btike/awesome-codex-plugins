@@ -224,7 +224,7 @@ class MalformedManifestTests(unittest.TestCase):
     def test_non_utf8_remote_root_is_unreadable(self) -> None:
         raw = io.BytesIO()
         with zipfile.ZipFile(raw, "w") as out:
-            out.writestr("demo-main/.codex-plugin/plugin.json", b"\\xff\\xfe")
+            out.writestr("demo-main/.codex-plugin/plugin.json", b"\xff\xfe")
         with zipfile.ZipFile(io.BytesIO(raw.getvalue())) as archive:
             with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
                 errors, warnings = VALIDATOR.validate_remote_repo("maker", "demo")
@@ -236,7 +236,7 @@ class MalformedManifestTests(unittest.TestCase):
             root = Path(scratch)
             bundle = root / "plugins" / "maker" / "demo"
             (bundle / ".codex-plugin").mkdir(parents=True)
-            (bundle / ".codex-plugin" / "plugin.json").write_bytes(b"\\xff\\xfe")
+            (bundle / ".codex-plugin" / "plugin.json").write_bytes(b"\xff\xfe")
             with patch.object(VALIDATOR, "REPO_ROOT", root):
                 errors, warnings = VALIDATOR.validate_local_bundle(bundle)
         self.assertTrue(any("plugin.json is not valid JSON" in error for error in errors))
