@@ -84,7 +84,7 @@ class RemoteIconValidationTests(unittest.TestCase):
         self.assertIn("SVG icon contains TODO/PLACEHOLDER text.", errors)
 
     def test_rejects_icon_exceeding_50_kib(self):
-        oversized_png = b"\\x89PNG\\r\\n\\x1a\\n" + b"x" * (validator.MAX_ICON_SIZE_BYTES + 1)
+        oversized_png = b"\x89PNG\r\n\x1a\n" + b"x" * (validator.MAX_ICON_SIZE_BYTES + 1)
         errors = self.validate("assets/icon.png", oversized_png)
         self.assertTrue(any("exceeds 50KB" in error for error in errors), errors)
 
@@ -94,7 +94,7 @@ class RemoteIconValidationTests(unittest.TestCase):
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC"
             "AAAAC0lEQVR42mP8/x8AAwMCAO+/6vcAAAAASUVORK5CYII="
         )
-        self.assertTrue(png.startswith(b"\\x89PNG\\r\\n\\x1a\\n"))
+        self.assertTrue(png.startswith(b"\x89PNG\r\n\x1a\n"))
         errors = self.validate("assets/icon.png", png)
         self.assertEqual(errors, [])
 
