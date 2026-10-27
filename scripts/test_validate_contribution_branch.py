@@ -162,6 +162,31 @@ class BranchQualifiedContributionTests(unittest.TestCase):
 
         self.assertEqual(VALIDATOR.get_new_readme_entries_from_diff(diff, base, head), [])
 
+    def test_listing_moved_from_other_section_requires_scan(self) -> None:
+        base = (
+            "## Official Plugins\n"
+            "- [Mover](https://github.com/example/moved-plugin) - Already listed.\n"
+            "\n"
+            "## Community Plugins\n"
+        )
+        head = (
+            "## Official Plugins\n"
+            "\n"
+            "## Community Plugins\n"
+            "- [Mover](https://github.com/example/moved-plugin) - Already listed.\n"
+        )
+        diff = "".join(
+            difflib.unified_diff(
+                base.splitlines(keepends=True),
+                head.splitlines(keepends=True),
+                fromfile="README.md",
+                tofile="README.md",
+                n=0,
+            )
+        )
+        entries = VALIDATOR.get_new_readme_entries_from_diff(diff, base, head)
+        self.assertEqual([entry.repo for entry in entries], ["moved-plugin"])
+
     def test_unresolvable_source_ref_fails_before_scanning(self) -> None:
         entry = self.parse_added_entry(
             "https://github.com/SupportPages-io/wtfm/tree/codex-plugin"
