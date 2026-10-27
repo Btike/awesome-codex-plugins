@@ -62,10 +62,11 @@ METADATA_ONLY_MIRROR_REPOS = {
     "mturac/everything-openai-codex",
 }
 EXTRA_MIRROR_PATHS = {
-    # Context Guard declares Skills in its manifest; its lifecycle hooks,
-    # script entry points and state schema live at separate top-level paths.
-    # Mirror only these published runtime paths, not arbitrary source files.
-    "GreenLv/codex-context-guard": ("hooks", "scripts", "assets/state.schema.json"),
+    # Context Guard's hook runtime and startup assets are not declared as Skills.
+    "GreenLv/codex-context-guard": (
+        "hooks", "scripts", "assets/state.schema.json", "assets/core-intent-v2.json",
+        "assets/core-observation-v2.schema.json",
+    ),
     # Workflow MCP bootstrap loads the sibling control-plane runtime; its MCP
     # App also reads assets/sidebar-icon.svg and Skills reference helper scripts.
     "TohmaN233/codex-agents-workflow": ("control-plane", "scripts", "assets"),
