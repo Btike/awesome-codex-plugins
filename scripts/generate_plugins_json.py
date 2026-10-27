@@ -242,7 +242,12 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
         if any(normalize_match_key(candidate) == expected for candidate in candidates):
             return root
 
-    return roots[0]
+    # Multiple manifests are installable bundles with distinct identities.
+    # Choosing the first one for an unmatched README name mislabels installs.
+    raise ValueError(
+        f"Ambiguous plugin manifest for {plugin['name']!r}: "
+        "multiple bundles exist; use a README name matching a manifest"
+    )
 
 
 def load_manifest(archive: zipfile.ZipFile, plugin_root: PurePosixPath) -> dict[str, object]:
