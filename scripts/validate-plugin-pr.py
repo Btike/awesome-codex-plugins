@@ -126,15 +126,18 @@ def find_plugin_root(archive: zipfile.ZipFile) -> PurePosixPath | None:
     return PurePosixPath(names[0]).parent.parent
 
 
+_UNREADABLE_MANIFEST = object()
+
+
 def load_manifest_from_archive(
     archive: zipfile.ZipFile, plugin_root: PurePosixPath
-) -> dict | None:
-    """Load plugin.json from the archive at the given root."""
+) -> object:
+    """Return decoded JSON, or a distinct sentinel for missing/invalid JSON."""
     manifest_name = plugin_root.joinpath(".codex-plugin", "plugin.json").as_posix()
     try:
         return json.loads(archive.read(manifest_name).decode("utf-8"))
     except (KeyError, json.JSONDecodeError):
-        return None
+        return _UNREADABLE_MANIFEST
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +270,7 @@ def validate_remote_repo(
         return errors, warnings
 
     manifest = load_manifest_from_archive(archive, plugin_root)
-    if manifest is None:
+    if manifest is _UNREADABLE_MANIFEST:
         errors.append("Could not read valid plugin.json from source repo")
         return errors, warnings
 
