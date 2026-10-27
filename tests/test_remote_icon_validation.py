@@ -71,6 +71,13 @@ class RemoteIconValidationTests(unittest.TestCase):
         )
         self.assertEqual(errors, [])
 
+    def test_rejects_entity_encoded_embedded_image_uri(self):
+        errors = self.validate(
+            "assets/icon.svg",
+            b'<svg><image href="data&#58;image/png;base64,AAA="/></svg>',
+        )
+        self.assertIn("SVG icon contains embedded base64 raster data.", errors)
+
     def test_rejects_placeholder_svg(self):
         errors = self.validate("assets/icon.svg", b"<svg><!-- TODO --></svg>")
         self.assertIn("SVG icon contains TODO/PLACEHOLDER text.", errors)
