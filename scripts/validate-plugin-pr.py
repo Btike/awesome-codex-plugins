@@ -277,10 +277,19 @@ def validate_remote_repo(
         elif icon_rel.startswith("/"):
             icon_rel = icon_rel[1:]
         icon_archive_path = plugin_root.joinpath(PurePosixPath(icon_rel)).as_posix()
+        suffix = PurePosixPath(icon_rel).suffix.lower()
+        if suffix not in ICON_EXTENSIONS:
+            errors.append(f"Icon has unsupported format '{suffix}'. Use SVG (preferred) or PNG.")
         try:
             icon_data = archive.read(icon_archive_path)
             if len(icon_data) > MAX_ICON_SIZE_BYTES:
                 errors.append(f"Icon is {len(icon_data) / 1024:.1f}KB, exceeds 50KB limit.")
+            if suffix == ".svg":
+                content = icon_data.decode("utf-8", errors="replace")
+                if "data:image/" in content or "base64" in content:
+                    errors.append("SVG icon contains embedded base64 raster data.")
+                if "TODO" in content or "PLACEHOLDER" in content:
+                    errors.append("SVG icon contains TODO/PLACEHOLDER text.")
         except KeyError:
             errors.append(
                 f"Icon file not found in source repo at: {icon_rel} "
