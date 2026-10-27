@@ -221,6 +221,27 @@ class MalformedManifestTests(unittest.TestCase):
         self.assertIn("Could not read valid plugin.json from source repo", errors)
         self.assertEqual(warnings, [])
 
+    def test_non_utf8_remote_root_is_unreadable(self) -> None:
+        raw = io.BytesIO()
+        with zipfile.ZipFile(raw, "w") as out:
+            out.writestr("demo-main/.codex-plugin/plugin.json", b"\\xff\\xfe")
+        with zipfile.ZipFile(io.BytesIO(raw.getvalue())) as archive:
+            with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                errors, warnings = VALIDATOR.validate_remote_repo("maker", "demo")
+        self.assertIn("Could not read valid plugin.json from source repo", errors)
+        self.assertEqual(warnings, [])
+
+    def test_non_utf8_local_root_is_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "demo"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            (bundle / ".codex-plugin" / "plugin.json").write_bytes(b"\\xff\\xfe")
+            with patch.object(VALIDATOR, "REPO_ROOT", root):
+                errors, warnings = VALIDATOR.validate_local_bundle(bundle)
+        self.assertTrue(any("plugin.json is not valid JSON" in error for error in errors))
+        self.assertEqual(warnings, [])
+
     def test_null_remote_interface_is_validation_error(self) -> None:
         errors = self.remote_errors(self.valid_fields(None))
         self.assertIn("Missing or invalid 'interface' object in plugin.json", errors)
