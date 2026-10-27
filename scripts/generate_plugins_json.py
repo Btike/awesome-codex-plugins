@@ -435,6 +435,14 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
             raise ValueError(f"Unsafe mirrored archive path: {relative_path!r}")
     mirrored_manifest = sanitize_metadata_only_manifest(manifest, plugin) if metadata_only else manifest
 
+    # Check archive integrity before clearing an existing published bundle.
+    # A corrupted selected member must not destroy a previous working mirror.
+    for relative_path in selected_paths:
+        archive_name = plugin_root.joinpath(PurePosixPath(relative_path)).as_posix()
+        with archive.open(archive_name) as member:
+            while member.read(1024 * 1024):
+                pass
+
     plugin_root_relative = plugin_root_relative_path(plugin_root)
     use_subpath = plugin.get("_mirror_subpath") == "true"
     destination_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
