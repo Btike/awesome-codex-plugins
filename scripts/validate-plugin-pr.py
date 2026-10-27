@@ -155,6 +155,8 @@ def validate_manifest_fields(manifest: object) -> list[str]:
         val = manifest.get(field)
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Missing or empty required field: {field}")
+        elif not isinstance(val, str):
+            errors.append(f"Required field '{field}' must be a string")
 
     interface = manifest.get("interface")
     if not isinstance(interface, dict):
@@ -165,6 +167,8 @@ def validate_manifest_fields(manifest: object) -> list[str]:
         val = interface.get(field)
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Missing or empty interface.{field}")
+        elif not isinstance(val, str):
+            errors.append(f"interface.{field} must be a string")
 
     version = manifest.get("version", "")
     if version and not re.match(r"^\d+\.\d+\.\d+", str(version)):
