@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import io
+import json
+import zipfile
 from pathlib import Path
 import sys
 import unittest
@@ -172,6 +175,76 @@ class ReadmeEntryRegexTests(unittest.TestCase):
 
         self.assertEqual(entries, [])
 
+
+
+    def test_distinct_named_plugins_can_share_one_repo(self) -> None:
+        repo_url = "https://github.com/redfox-data/redfox-agent-plugins"
+        umbrella = f"- [Redfox Agent Plugins]({repo_url}) - Umbrella."
+        individual = [
+            f"- [account-video-downloader]({repo_url}) - Account videos.",
+            f"- [image-gen]({repo_url}) - Image generation.",
+        ]
+        diff = "\n".join(
+            ["diff --git a/README.md b/README.md", "-" + umbrella]
+            + ["+" + line for line in individual]
+        )
+        base = "## Community Plugins\n### Development & Workflow\n" + umbrella
+        head = "## Community Plugins\n### Development & Workflow\n" + "\n".join(individual)
+        entries = self.parse_new_entries(diff, base, head)
+        self.assertEqual(
+            [entry["display_name"] for entry in entries],
+            ["account-video-downloader", "image-gen"],
+        )
+        self.assertEqual({entry["url"] for entry in entries}, {repo_url})
+
+
+class MultiPluginManifestTests(unittest.TestCase):
+    """Select the named bundle and fail closed for ambiguous or unknown names."""
+
+    def build_archive(self) -> zipfile.ZipFile:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as output:
+            for name, suffix in (("alpha", ".png"), ("beta", ".txt")):
+                manifest = {
+                    "name": name,
+                    "version": "1.0.0",
+                    "description": "Example",
+                    "repository": "https://github.com/maker/demo",
+                    "license": "MIT",
+                    "interface": {
+                        "displayName": name.title(),
+                        "shortDescription": "Example",
+                        "composerIcon": f"./assets/icon{suffix}",
+                    },
+                }
+                root = f"demo-main/plugins/{name}"
+                output.writestr(f"{root}/.codex-plugin/plugin.json", json.dumps(manifest))
+                output.writestr(f"{root}/assets/icon{suffix}", b"test")
+        return zipfile.ZipFile(io.BytesIO(buffer.getvalue()))
+
+    def test_validation_reaches_named_nested_manifest(self) -> None:
+        with self.build_archive() as archive:
+            with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                good, _warnings = VALIDATOR.validate_remote_repo(
+                    "maker", "demo", display_name="Alpha"
+                )
+                bad, _warnings = VALIDATOR.validate_remote_repo(
+                    "maker", "demo", display_name="beta"
+                )
+        self.assertEqual(good, [])
+        self.assertTrue(
+            any("unsupported format" in error for error in bad), bad
+        )
+
+    def test_unknown_nested_manifest_name_fails_closed(self) -> None:
+        with self.build_archive() as archive:
+            with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                errors, _warnings = VALIDATOR.validate_remote_repo(
+                    "maker", "demo", display_name="unknown"
+                )
+        self.assertTrue(
+            any("uniquely matching manifest" in error for error in errors), errors
+        )
 
 if __name__ == "__main__":
     unittest.main()
