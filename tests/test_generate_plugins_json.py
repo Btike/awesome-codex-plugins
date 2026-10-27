@@ -103,6 +103,55 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve-existing-bundle")
             self.assertFalse((root / "escape.txt").exists())
 
+    def test_context_guard_mirror_writes_install_runtime_from_archive(self):
+        import io
+        import json
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            source_bytes = io.BytesIO()
+            upstream_files = {
+                ".codex-plugin/plugin.json": json.dumps({
+                    "name": "context-guard",
+                    "skills": "./skills/",
+                    "interface": {"composerIcon": "./assets/icon.svg"},
+                }),
+                "skills/guard/SKILL.md": "# Guard",
+                "hooks/hooks.json": '{"hooks":[]}',
+                "scripts/context_guard.py": "print('runtime')",
+                "scripts/manage_plugin.py": "print('manager')",
+                "scripts/smoke_installed.py": "print('smoke')",
+                "assets/state.schema.json": "{}",
+                "assets/icon.svg": "<svg/>",
+                "scripts/__pycache__/cached.pyc": "not-a-bundle",
+            }
+            with zipfile.ZipFile(source_bytes, "w") as archive:
+                for path, value in upstream_files.items():
+                    archive.writestr(f"codex-context-guard-main/{path}", value)
+
+            source_bytes.seek(0)
+            with zipfile.ZipFile(source_bytes) as archive, \
+                    patch.object(MODULE, "fetch_repo_archive", return_value=archive), \
+                    patch.object(MODULE, "PLUGINS_ROOT", root):
+                manifest, marketplace_path, relative_root = MODULE.mirror_plugin_bundle({
+                    "owner": "GreenLv", "repo": "codex-context-guard"
+                })
+
+            mirrored = root / "GreenLv" / "codex-context-guard"
+            self.assertEqual(manifest["name"], "context-guard")
+            self.assertEqual(marketplace_path, "./plugins/GreenLv/codex-context-guard")
+            self.assertEqual(relative_root, "")
+            for required in (
+                ".codex-plugin/plugin.json", "skills/guard/SKILL.md",
+                "hooks/hooks.json", "scripts/context_guard.py",
+                "scripts/manage_plugin.py", "scripts/smoke_installed.py",
+                "assets/state.schema.json", "assets/icon.svg",
+            ):
+                with self.subTest(path=required):
+                    self.assertTrue((mirrored / required).is_file())
+            self.assertFalse((mirrored / "scripts/__pycache__/cached.pyc").exists())
+
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
