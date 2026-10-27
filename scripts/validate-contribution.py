@@ -236,10 +236,26 @@ def get_new_readme_entries_from_diff(diff: str, base_readme: str, head_readme: s
     # Scan new or revised listing rows, including version/description updates
     # to an existing source URL. Identical lines merely moved in the README
     # do not represent a new source revision and must not trigger a rescan.
-    base_entries = {
-        (match.group(1).strip(), normalize_url(match.group(2)), match.group(6).strip())
-        for match in README_ENTRY_RE.finditer(base_readme)
-    }
+    # Compare only with existing Community Plugins entries. A listing moved
+    # here from another README section must still receive a centralized scan.
+    base_entries: set[tuple[str, str, str]] = set()
+    base_section = ""
+    for base_line in base_readme.splitlines():
+        heading = re.match(r"^##\s+(.+?)\s*$", base_line)
+        if heading:
+            base_section = heading.group(1).strip()
+            continue
+        if base_section != "Community Plugins":
+            continue
+        base_match = README_ENTRY_RE.match(base_line.strip())
+        if base_match:
+            base_entries.add(
+                (
+                    base_match.group(1).strip(),
+                    normalize_url(base_match.group(2)),
+                    base_match.group(6).strip(),
+                )
+            )
     readme_lines = head_readme.splitlines()
 
     entries: list[Contribution] = []
