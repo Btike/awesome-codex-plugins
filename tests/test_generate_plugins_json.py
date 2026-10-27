@@ -72,6 +72,30 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             )
         ))
 
+    def test_context_guard_runtime_mirror_accepts_github_link_case_variations(self):
+        # GitHub resolves owner/repository names case-insensitively. A README
+        # link with alternate casing must not omit the published hook runtime.
+        root = PurePosixPath("codex-context-guard-main")
+        names = {
+            "codex-context-guard-main/.codex-plugin/plugin.json",
+            "codex-context-guard-main/hooks/hooks.json",
+            "codex-context-guard-main/scripts/context_guard.py",
+            "codex-context-guard-main/scripts/compiled.pyc",
+            "codex-context-guard-main/assets/state.schema.json",
+        }
+        manifest = {"name": "context-guard", "skills": "./skills/"}
+        paths = MODULE.collect_selected_paths(
+            manifest, names, root,
+            {"owner": "greenlv", "repo": "CODEX-CONTEXT-GUARD"},
+        )
+        self.assertTrue({
+            ".codex-plugin/plugin.json",
+            "hooks/hooks.json",
+            "scripts/context_guard.py",
+            "assets/state.schema.json",
+        }.issubset(paths))
+        self.assertNotIn("scripts/compiled.pyc", paths)
+
     def test_context_guard_runtime_mirror_does_not_apply_to_unrelated_owner(self):
         # A repository with the same basename must not inherit GreenLv's
         # source-specific runtime paths or copy unrelated scripts/hooks.
