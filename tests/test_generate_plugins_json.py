@@ -2,7 +2,7 @@ import importlib.util
 import tempfile
 import unittest
 from unittest.mock import patch
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 SPEC = importlib.util.spec_from_file_location(
     "generate_plugins_json", Path(__file__).resolve().parents[1] / "scripts/generate_plugins_json.py"
@@ -195,6 +195,43 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     MODULE.prune_unlisted_bundles(root, [{"owner": "uizze", "repo": "uizze"}])
                 self.assertEqual((retired / "SKILL.md").read_text(), "preserve-until-preflight-completes")
+
+
+class MultiPluginRootSelectionTests(unittest.TestCase):
+    def test_multi_bundle_match_is_explicit_and_umbrella_is_rejected(self):
+        import io
+        import json
+        import zipfile
+
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            for name in ("la-review", "toolkit"):
+                archive.writestr(
+                    f"marketplace-main/plugins/{name}/.codex-plugin/plugin.json",
+                    json.dumps({"name": name, "interface": {"displayName": name}}),
+                )
+
+        with zipfile.ZipFile(io.BytesIO(output.getvalue())) as archive:
+            names = set(archive.namelist())
+            selected = MODULE.resolve_plugin_root(
+                archive, names, {"name": "toolkit"}
+            )
+            self.assertEqual(
+                selected, PurePosixPath("marketplace-main/plugins/toolkit")
+            )
+            with self.assertRaisesRegex(ValueError, "Ambiguous plugin manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, names, {"name": "Marketplace umbrella"}
+                )
+
+            # A repository containing exactly one manifest is still valid.
+            single = {next(name for name in names if "/la-review/" in name)}
+            self.assertEqual(
+                MODULE.resolve_plugin_root(
+                    archive, single, {"name": "Unmatched legacy display name"}
+                ),
+                PurePosixPath("marketplace-main/plugins/la-review"),
+            )
 
 
 class BranchAwareSourceTests(unittest.TestCase):
