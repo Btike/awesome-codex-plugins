@@ -424,6 +424,11 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
         if metadata_only
         else collect_selected_paths(manifest, names, plugin_root, plugin)
     )
+    # Refuse unsafe ZIP members before clearing an existing published bundle.
+    for relative_path in selected_paths:
+        path = PurePosixPath(relative_path)
+        if path.is_absolute() or ".." in path.parts or "\\" in relative_path:
+            raise ValueError(f"Unsafe mirrored archive path: {relative_path!r}")
     mirrored_manifest = sanitize_metadata_only_manifest(manifest, plugin) if metadata_only else manifest
 
     plugin_root_relative = plugin_root_relative_path(plugin_root)
