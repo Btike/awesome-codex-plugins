@@ -323,6 +323,19 @@ def collect_selected_paths(
     for extra_path in EXTRA_MIRROR_PATHS.get(f"{plugin['owner']}/{plugin['repo']}", ()):
         add_recursive_selection(selected, all_names, plugin_root, extra_path)
 
+    # Context Guard's published .codexignore excludes transient build/cache
+    # artifacts. Never ship them merely because its hook runtime uses scripts/.
+    if f"{plugin['owner']}/{plugin['repo']}" == "GreenLv/codex-context-guard":
+        ignored_dirs = {
+            ".codex", ".git", ".venv", "__pycache__",
+            ".pytest_cache", ".ruff_cache", "build", "dist",
+        }
+        selected = {
+            path for path in selected
+            if not ignored_dirs.intersection(PurePosixPath(path).parts)
+            and not path.endswith(".pyc")
+        }
+
     return selected
 
 
