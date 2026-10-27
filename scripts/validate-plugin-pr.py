@@ -175,6 +175,19 @@ def validate_manifest_fields(manifest: dict) -> list[str]:
 
 
 
+def normalize_icon_relative_path(raw_icon: str) -> str | None:
+    """Keep declared icon paths inside their own plugin, on all platforms."""
+    icon_rel = raw_icon[2:] if raw_icon.startswith("./") else raw_icon
+    if icon_rel.startswith("/"):
+        icon_rel = icon_rel[1:]  # Existing root-relative manifest convention.
+    if not icon_rel or "\\" in icon_rel or ":" in icon_rel:
+        return None
+    relative = PurePosixPath(icon_rel)
+    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+        return None
+    return relative.as_posix()
+
+
 def validate_icon_bytes(icon_rel: str, icon_data: bytes) -> list[str]:
     """Apply the same icon checks to local files and remote source archives."""
     errors: list[str] = []
@@ -228,16 +241,17 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
     interface = manifest.get("interface", {})
     composer_icon = str(interface.get("composerIcon", "")).strip()
     if composer_icon:
-        icon_rel = composer_icon
-        if icon_rel.startswith("./"):
-            icon_rel = icon_rel[2:]
-        elif icon_rel.startswith("/"):
-            icon_rel = icon_rel[1:]
-        icon_path = plugin_dir / icon_rel
-        if not icon_path.exists():
-            errors.append(f"Icon file not found: {icon_rel} (resolved to {icon_path.relative_to(REPO_ROOT)})")
+        icon_rel = normalize_icon_relative_path(composer_icon)
+        if icon_rel is None:
+            errors.append("composerIcon must be a safe plugin-relative path")
         else:
-            errors.extend(validate_icon_bytes(icon_rel, icon_path.read_bytes()))
+            icon_path = plugin_dir / icon_rel
+            if not icon_path.resolve().is_relative_to(plugin_dir.resolve()):
+                errors.append("composerIcon must stay within its plugin bundle")
+            elif not icon_path.exists():
+                errors.append(f"Icon file not found: {icon_rel} (resolved to {icon_path.relative_to(REPO_ROOT)})")
+            else:
+                errors.extend(validate_icon_bytes(icon_rel, icon_path.read_bytes()))
 
     # README entry check (warning only)
     parts = plugin_dir.relative_to(REPO_ROOT).parts
@@ -288,19 +302,18 @@ def validate_remote_repo(
     interface = manifest.get("interface", {})
     composer_icon = str(interface.get("composerIcon", "")).strip()
     if composer_icon:
-        icon_rel = composer_icon
-        if icon_rel.startswith("./"):
-            icon_rel = icon_rel[2:]
-        elif icon_rel.startswith("/"):
-            icon_rel = icon_rel[1:]
-        icon_archive_path = plugin_root.joinpath(PurePosixPath(icon_rel)).as_posix()
-        try:
-            errors.extend(validate_icon_bytes(icon_rel, archive.read(icon_archive_path)))
-        except KeyError:
-            errors.append(
-                f"Icon file not found in source repo at: {icon_rel} "
-                f"(referenced by composerIcon in plugin.json)"
-            )
+        icon_rel = normalize_icon_relative_path(composer_icon)
+        if icon_rel is None:
+            errors.append("composerIcon must be a safe plugin-relative path")
+        else:
+            icon_archive_path = plugin_root.joinpath(PurePosixPath(icon_rel)).as_posix()
+            try:
+                errors.extend(validate_icon_bytes(icon_rel, archive.read(icon_archive_path)))
+            except KeyError:
+                errors.append(
+                    f"Icon file not found in source repo at: {icon_rel} "
+                    f"(referenced by composerIcon in plugin.json)"
+                )
 
     return errors, warnings
 
