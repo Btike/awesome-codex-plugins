@@ -23,6 +23,7 @@ If --base-ref is not provided, defaults to origin/main.
 
 from __future__ import annotations
 
+import html
 import io
 import json
 import os
@@ -184,6 +185,8 @@ def validate_icon_bytes(icon_rel: str, icon_data: bytes) -> list[str]:
         errors.append(f"Icon is {len(icon_data) / 1024:.1f}KB, exceeds 50KB limit.")
     if suffix == ".svg":
         content = icon_data.decode("utf-8", errors="replace")
+        # SVG/XML character references can conceal embedded image data URIs.
+        content = html.unescape(content)
         # Only flag image data URIs used as resources, not harmless prose.
         resource_uri = re.search(
             r"(?:\b(?:xlink:)?href|\bsrc)\s*=\s*['\"]\s*data:image/"
