@@ -72,6 +72,25 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             )
         ))
 
+    def test_context_guard_runtime_mirror_does_not_apply_to_unrelated_owner(self):
+        # A repository with the same basename must not inherit GreenLv's
+        # source-specific runtime paths or copy unrelated scripts/hooks.
+        root = PurePosixPath("codex-context-guard-main")
+        names = {
+            "codex-context-guard-main/.codex-plugin/plugin.json",
+            "codex-context-guard-main/hooks/hooks.json",
+            "codex-context-guard-main/scripts/context_guard.py",
+            "codex-context-guard-main/assets/state.schema.json",
+        }
+        manifest = {"name": "context-guard", "skills": "./skills/"}
+
+        paths = MODULE.collect_selected_paths(
+            manifest, names, root,
+            {"owner": "unrelated-owner", "repo": "codex-context-guard"},
+        )
+
+        self.assertEqual(paths, {".codex-plugin/plugin.json"})
+
     def test_context_guard_rejects_archive_traversal_before_replacing_bundle(self):
         import io
         import zipfile
