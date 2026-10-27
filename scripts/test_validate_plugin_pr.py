@@ -242,6 +242,59 @@ class MalformedManifestTests(unittest.TestCase):
         self.assertTrue(any("plugin.json is not valid JSON" in error for error in errors))
         self.assertEqual(warnings, [])
 
+    def test_non_string_required_fields_rejected_in_remote_submission(self) -> None:
+        valid_interface = {
+            "displayName": "Demo",
+            "shortDescription": "Demo",
+            "composerIcon": "./assets/icon.svg",
+        }
+        for field, value in (
+            ("name", []),
+            ("version", 123),
+            ("description", {}),
+            ("repository", False),
+            ("license", ["MIT"]),
+        ):
+            with self.subTest(field=field):
+                manifest = self.valid_fields(valid_interface)
+                manifest[field] = value
+                errors = self.remote_errors(manifest)
+                self.assertIn(f"Required field '{field}' must be a string", errors)
+
+    def test_non_string_interface_fields_rejected_in_remote_submission(self) -> None:
+        for field, value in (
+            ("displayName", []),
+            ("shortDescription", 7),
+            ("composerIcon", {}),
+        ):
+            with self.subTest(field=field):
+                interface = {
+                    "displayName": "Demo",
+                    "shortDescription": "Demo",
+                    "composerIcon": "./assets/icon.svg",
+                }
+                interface[field] = value
+                errors = self.remote_errors(self.valid_fields(interface))
+                self.assertIn(f"interface.{field} must be a string", errors)
+
+    def test_non_string_local_manifest_fields_are_validation_errors(self) -> None:
+        manifest = self.valid_fields({
+            "displayName": "Demo",
+            "shortDescription": "Demo",
+            "composerIcon": "./assets/icon.svg",
+        })
+        manifest["name"] = []
+        manifest["interface"]["displayName"] = []
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "demo"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            (bundle / ".codex-plugin" / "plugin.json").write_text(json.dumps(manifest))
+            with patch.object(VALIDATOR, "REPO_ROOT", root):
+                errors, _warnings = VALIDATOR.validate_local_bundle(bundle)
+        self.assertIn("Required field 'name' must be a string", errors)
+        self.assertIn("interface.displayName must be a string", errors)
+
     def test_null_remote_interface_is_validation_error(self) -> None:
         errors = self.remote_errors(self.valid_fields(None))
         self.assertIn("Missing or invalid 'interface' object in plugin.json", errors)
