@@ -334,7 +334,14 @@ def get_new_readme_entries(base_ref: str) -> list[dict[str, str]]:
 
     # Only the Community Plugins section contains Codex plugin listings.
     # Other sections such as Related Projects can link to non-plugin projects.
-    base_readme = git("show", f"{base_ref}:README.md")
+    # Diff and duplicate detection must compare against the SAME common ancestor.
+    # Reading the moving base-branch tip can hide a listing added on both branches.
+    merge_base = git("merge-base", base_ref, "HEAD")
+    if not merge_base:
+        raise RuntimeError(f"Cannot find merge base for README validation: {base_ref}")
+    base_readme = git("show", f"{merge_base}:README.md")
+    if not base_readme:
+        raise RuntimeError(f"Cannot read README at merge base {merge_base}")
     current_readme = README_PATH.read_text(encoding="utf-8") if README_PATH.exists() else ""
     base_urls = community_plugin_urls(base_readme)
     current_urls = community_plugin_urls(current_readme)
