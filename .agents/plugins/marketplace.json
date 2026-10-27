@@ -2078,7 +2078,7 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Development & Workflow",
-      "description": "Lean spec workflow with direct or planned execution, optional specifications, one final review by default, recoverable state, and a bundled same-version CLI runtime.",
+      "description": "Lean spec workflow with direct or planned execution, optional specifications, one final review, recoverable state, a bundled same-version CLI, Windows-compatible Qoder/WorkBuddy installers, and a CatPaw (妙手) import-package preview.",
       "icon": "./plugins/MageByte-Zero/spec-superflow/assets/icon.svg"
     },
     {

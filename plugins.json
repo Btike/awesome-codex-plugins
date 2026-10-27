@@ -1405,7 +1405,7 @@
       "url": "https://github.com/MageByte-Zero/spec-superflow",
       "owner": "MageByte-Zero",
       "repo": "spec-superflow",
-      "description": "Lean spec workflow with direct or planned execution, optional specifications, one final review by default, recoverable state, and a bundled same-version CLI runtime.",
+      "description": "Lean spec workflow with direct or planned execution, optional specifications, one final review, recoverable state, a bundled same-version CLI, Windows-compatible Qoder/WorkBuddy installers, and a CatPaw (妙手) import-package preview.",
       "category": "Development & Workflow",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/MageByte-Zero/spec-superflow/HEAD/.codex-plugin/plugin.json"
