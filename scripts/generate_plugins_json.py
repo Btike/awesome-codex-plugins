@@ -521,14 +521,15 @@ def main() -> None:
     # Local README links are retention-only; never fetch them from GitHub.
     plugins = [plugin for plugin in plugins if plugin.get("_local_bundle") != "true"]
     mirrored_entries: list[dict[str, object]] = []
-    skipped: list[str] = []
+    skipped: set[tuple[str, str, str, str]] = set()
     for plugin in plugins:
         owner_repo = f"{plugin['owner']}/{plugin['repo']}"
+        entry_key = (plugin["owner"], plugin["repo"], plugin["name"], plugin.get("source_ref", ""))
         try:
             manifest, marketplace_path, plugin_root_relative = mirror_plugin_bundle(plugin)
         except Exception as e:
             print(f"WARNING: Skipping {owner_repo} — {e}", file=sys.stderr)
-            skipped.append(owner_repo)
+            skipped.add(entry_key)
             continue
         plugin["install_url"] = build_raw_manifest_url(plugin, plugin_root_relative)
 
@@ -559,7 +560,10 @@ def main() -> None:
         mirrored_entries.append(build_marketplace_entry(plugin, manifest, marketplace_path, icon_path))
 
     # Filter out skipped plugins from public plugin list so counts stay accurate
-    ok_plugins = [p for p in plugins if f"{p['owner']}/{p['repo']}" not in skipped]
+    ok_plugins = [
+        p for p in plugins
+        if (p["owner"], p["repo"], p["name"], p.get("source_ref", "")) not in skipped
+    ]
 
     marketplace = {
         "name": "awesome-codex-plugins",
@@ -586,7 +590,8 @@ def main() -> None:
     write_json(OUTPUT, plugins_json)
     print(f"Wrote {len(ok_plugins)} plugins to {OUTPUT}")
     if skipped:
-        print(f"Skipped {len(skipped)} broken upstream(s): {', '.join(skipped)}", file=sys.stderr)
+        skipped_labels = sorted(f"{owner}/{repo}:{name}@{ref or 'HEAD'}" for owner, repo, name, ref in skipped)
+        print(f"Skipped {len(skipped)} broken plugin entry(ies): {', '.join(skipped_labels)}", file=sys.stderr)
     print(f"Wrote curated marketplace to {MARKETPLACE_OUTPUT}")
 
 
