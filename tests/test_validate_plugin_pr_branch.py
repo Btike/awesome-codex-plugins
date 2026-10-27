@@ -61,7 +61,7 @@ class BranchAwareValidationTests(unittest.TestCase):
             with patch.object(MODULE, "README_PATH", readme), patch.object(
                 MODULE,
                 "git",
-                side_effect=[f"diff --git a/README.md b/README.md\n+{entry_line}", "## Community Plugins\n"],
+                side_effect=[f"diff --git a/README.md b/README.md\n+{entry_line}", "abc123mergebase", "## Community Plugins\n"],
             ):
                 entries = MODULE.get_new_readme_entries("origin/main")
 
