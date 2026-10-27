@@ -34,6 +34,8 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "codex-context-guard-main/scripts/compiled.pyc",
             "codex-context-guard-main/assets/icon.svg",
             "codex-context-guard-main/assets/state.schema.json",
+            "codex-context-guard-main/assets/core-intent-v2.json",
+            "codex-context-guard-main/assets/core-observation-v2.schema.json",
             "codex-context-guard-main/internal/not-for-distribution.txt",
         }
         manifest = {
@@ -56,6 +58,8 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "scripts/run-context-guard.ps1",
             "assets/icon.svg",
             "assets/state.schema.json",
+            "assets/core-intent-v2.json",
+            "assets/core-observation-v2.schema.json",
         }.issubset(paths))
         self.assertNotIn("internal/not-for-distribution.txt", paths)
         self.assertTrue(all(
@@ -82,6 +86,8 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "codex-context-guard-main/scripts/context_guard.py",
             "codex-context-guard-main/scripts/compiled.pyc",
             "codex-context-guard-main/assets/state.schema.json",
+            "codex-context-guard-main/assets/core-intent-v2.json",
+            "codex-context-guard-main/assets/core-observation-v2.schema.json",
         }
         manifest = {"name": "context-guard", "skills": "./skills/"}
         paths = MODULE.collect_selected_paths(
@@ -93,6 +99,8 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "hooks/hooks.json",
             "scripts/context_guard.py",
             "assets/state.schema.json",
+            "assets/core-intent-v2.json",
+            "assets/core-observation-v2.schema.json",
         }.issubset(paths))
         self.assertNotIn("scripts/compiled.pyc", paths)
 
@@ -166,6 +174,8 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 "scripts/manage_plugin.py": "print('manager')",
                 "scripts/smoke_installed.py": "print('smoke')",
                 "assets/state.schema.json": "{}",
+                "assets/core-intent-v2.json": '{"schema":"core-intent-rules/v1","patterns":{}}',
+                "assets/core-observation-v2.schema.json": '{"$id":"urn:context-guard:core-observation:v2"}',
                 "assets/icon.svg": "<svg/>",
                 "scripts/__pycache__/cached.pyc": "not-a-bundle",
             }
@@ -190,10 +200,19 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 "hooks/hooks.json", "scripts/context_guard.py",
                 "scripts/manage_plugin.py", "scripts/smoke_installed.py",
                 "assets/state.schema.json", "assets/icon.svg",
+                "assets/core-intent-v2.json",
+                "assets/core-observation-v2.schema.json",
             ):
                 with self.subTest(path=required):
                     self.assertTrue((mirrored / required).is_file())
             self.assertFalse((mirrored / "scripts/__pycache__/cached.pyc").exists())
+            # Bundle-level startup inputs are installed and parse as JSON.
+            intent = json.loads((mirrored / "assets/core-intent-v2.json").read_text())
+            observation = json.loads(
+                (mirrored / "assets/core-observation-v2.schema.json").read_text()
+            )
+            self.assertEqual(intent["schema"], "core-intent-rules/v1")
+            self.assertEqual(observation["$id"], "urn:context-guard:core-observation:v2")
 
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
