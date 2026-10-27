@@ -3,9 +3,10 @@
 Kept separate from the marketplace generator to preserve the 500-line source limit.
 """
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import json
 import shutil
+import zipfile
 
 RETIRED_BUNDLE_IDENTITIES = {("samuelbushi", "uizze"), ("waynehamadi", "datacircle-plugin")}
 
@@ -47,3 +48,14 @@ def prune_unlisted_bundles(root: Path, plugins: list[dict[str, str]]) -> list[st
         shutil.rmtree(repo)
         removed.append(f"{repo.parent.name}/{repo.name}")
     return removed
+
+
+def verify_archive_members(
+    archive: zipfile.ZipFile, plugin_root: PurePosixPath, selected_paths: set[str]
+) -> None:
+    """Check selected ZIP payloads before replacing a published mirror."""
+    for relative_path in selected_paths:
+        archive_name = plugin_root.joinpath(PurePosixPath(relative_path)).as_posix()
+        with archive.open(archive_name) as member:
+            while member.read(1024 * 1024):
+                pass
