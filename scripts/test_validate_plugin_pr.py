@@ -206,6 +206,21 @@ class MalformedManifestTests(unittest.TestCase):
         errors = self.remote_errors([])
         self.assertIn("plugin.json must contain a JSON object", errors)
 
+    def test_null_remote_root_is_validation_error(self) -> None:
+        errors = self.remote_errors(None)
+        self.assertIn("plugin.json must contain a JSON object", errors)
+        self.assertNotIn("Could not read valid plugin.json from source repo", errors)
+
+    def test_invalid_json_remote_root_is_unreadable(self) -> None:
+        raw = io.BytesIO()
+        with zipfile.ZipFile(raw, "w") as out:
+            out.writestr("demo-main/.codex-plugin/plugin.json", "{invalid")
+        with zipfile.ZipFile(io.BytesIO(raw.getvalue())) as archive:
+            with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                errors, warnings = VALIDATOR.validate_remote_repo("maker", "demo")
+        self.assertIn("Could not read valid plugin.json from source repo", errors)
+        self.assertEqual(warnings, [])
+
     def test_null_remote_interface_is_validation_error(self) -> None:
         errors = self.remote_errors(self.valid_fields(None))
         self.assertIn("Missing or invalid 'interface' object in plugin.json", errors)
