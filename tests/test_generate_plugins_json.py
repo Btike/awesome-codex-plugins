@@ -19,6 +19,13 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "codex-context-guard-main/hooks/hooks.json",
             "codex-context-guard-main/scripts/context_guard.py",
             "codex-context-guard-main/scripts/manage_plugin.py",
+            "codex-context-guard-main/scripts/cg_instruction.py",
+            "codex-context-guard-main/scripts/run_context_guard.sh",
+            "codex-context-guard-main/scripts/run-context-guard.ps1",
+            "codex-context-guard-main/scripts/__pycache__/context_guard.cpython-314.pyc",
+            "codex-context-guard-main/scripts/build/temp.json",
+            "codex-context-guard-main/hooks/.pytest_cache/state",
+            "codex-context-guard-main/scripts/dist/bundle.js",
             "codex-context-guard-main/assets/icon.svg",
             "codex-context-guard-main/assets/state.schema.json",
             "codex-context-guard-main/internal/not-for-distribution.txt",
@@ -37,10 +44,21 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "hooks/hooks.json",
             "scripts/context_guard.py",
             "scripts/manage_plugin.py",
+            "scripts/cg_instruction.py",
+            "scripts/run_context_guard.sh",
+            "scripts/run-context-guard.ps1",
             "assets/icon.svg",
             "assets/state.schema.json",
         }.issubset(paths))
         self.assertNotIn("internal/not-for-distribution.txt", paths)
+        self.assertTrue(all(
+            name not in paths for name in (
+                "scripts/__pycache__/context_guard.cpython-314.pyc",
+                "scripts/build/temp.json",
+                "hooks/.pytest_cache/state",
+                "scripts/dist/bundle.js",
+            )
+        ))
 
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
