@@ -2833,6 +2833,21 @@
       "description": "Translate PDFs with local BabelDOC typesetting, configurable translation providers, bilingual output and custom terminology."
     },
     {
+      "name": "bankbridge",
+      "displayName": "BankBridge",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bankbridge-money/bankbridge-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Tools & Integrations",
+      "description": "Remote MCP server and skill that give Codex read-only access to your own US bank, credit card and investment accounts, fetched live, for questions about spending, subscriptions, cashflow and holdings; paid, $5/month per connected bank.",
+      "icon": "./plugins/bankbridge-money/bankbridge-plugin/assets/icon.png"
+    },
+    {
       "name": "bkt",
       "displayName": "Bitbucket CLI",
       "source": {

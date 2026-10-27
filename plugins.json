@@ -3,7 +3,7 @@
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
   "last_updated": "2026-10-27",
-  "total": 337,
+  "total": 338,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -1920,6 +1920,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/reliable-ly0411/babeldoc-pdf-translate/HEAD/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "BankBridge",
+      "url": "https://github.com/bankbridge-money/bankbridge-plugin",
+      "owner": "bankbridge-money",
+      "repo": "bankbridge-plugin",
+      "description": "Remote MCP server and skill that give Codex read-only access to your own US bank, credit card and investment accounts, fetched live, for questions about spending, subscriptions, cashflow and holdings; paid, $5/month per connected bank.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/bankbridge-money/bankbridge-plugin/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "Bitbucket CLI",
