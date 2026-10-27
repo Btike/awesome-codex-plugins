@@ -27,6 +27,11 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             "codex-context-guard-main/scripts/build/temp.json",
             "codex-context-guard-main/hooks/.pytest_cache/state",
             "codex-context-guard-main/scripts/dist/bundle.js",
+            "codex-context-guard-main/scripts/.venv/pyvenv.cfg",
+            "codex-context-guard-main/hooks/.ruff_cache/index",
+            "codex-context-guard-main/hooks/.codex/session.json",
+            "codex-context-guard-main/scripts/.git/config",
+            "codex-context-guard-main/scripts/compiled.pyc",
             "codex-context-guard-main/assets/icon.svg",
             "codex-context-guard-main/assets/state.schema.json",
             "codex-context-guard-main/internal/not-for-distribution.txt",
@@ -59,6 +64,11 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 "scripts/build/temp.json",
                 "hooks/.pytest_cache/state",
                 "scripts/dist/bundle.js",
+                "scripts/.venv/pyvenv.cfg",
+                "hooks/.ruff_cache/index",
+                "hooks/.codex/session.json",
+                "scripts/.git/config",
+                "scripts/compiled.pyc",
             )
         ))
 
