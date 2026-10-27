@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import unittest
+import tempfile
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
@@ -87,6 +88,42 @@ class RemoteIconValidationTests(unittest.TestCase):
         oversized_png = b"\x89PNG\r\n\x1a\n" + b"x" * (validator.MAX_ICON_SIZE_BYTES + 1)
         errors = self.validate("assets/icon.png", oversized_png)
         self.assertTrue(any("exceeds 50KB" in error for error in errors), errors)
+
+    def test_rejects_parent_path_in_remote_icon(self):
+        errors = self.validate("../private/icon.png", b"not an icon")
+        self.assertIn("composerIcon must be a safe plugin-relative path", errors)
+
+    def test_rejects_windows_style_escape_in_remote_icon(self):
+        errors = self.validate("..\\\\private\\\\icon.png", b"not an icon")
+        self.assertIn("composerIcon must be a safe plugin-relative path", errors)
+
+    def test_rejects_local_symlink_icon_escape(self):
+        manifest = {
+            "name": "example",
+            "version": "1.0.0",
+            "description": "Example plugin",
+            "repository": "https://github.com/maker/example",
+            "license": "MIT",
+            "interface": {
+                "displayName": "Example",
+                "shortDescription": "Example plugin",
+                "composerIcon": "./assets/icon.png",
+            },
+        }
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "example"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            (bundle / "assets").mkdir()
+            outside = root / "outside.png"
+            outside.write_bytes(b"private")
+            (bundle / "assets" / "icon.png").symlink_to(outside)
+            (bundle / ".codex-plugin" / "plugin.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            with patch.object(validator, "REPO_ROOT", root):
+                errors, _warnings = validator.validate_local_bundle(bundle)
+        self.assertIn("composerIcon must stay within its plugin bundle", errors)
 
     def test_accepts_valid_small_png(self):
         # A real one-pixel PNG, not the literal ASCII sequence "\\x89PNG".
