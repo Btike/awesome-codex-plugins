@@ -228,13 +228,16 @@ def current_readme_section(readme_lines: list[str], line_number: int) -> str:
 
 
 def get_new_readme_entries_from_diff(diff: str, base_readme: str, head_readme: str) -> list[Contribution]:
-    """Find newly added Community Plugins entries in a README diff."""
+    """Find new or updated Community Plugins rows in a README diff."""
 
     if not diff:
         return []
 
-    base_urls = {
-        normalize_url(match.group(2))
+    # Scan new or revised listing rows, including version/description updates
+    # to an existing source URL. Identical lines merely moved in the README
+    # do not represent a new source revision and must not trigger a rescan.
+    base_entries = {
+        (match.group(1).strip(), normalize_url(match.group(2)), match.group(6).strip())
         for match in README_ENTRY_RE.finditer(base_readme)
     }
     readme_lines = head_readme.splitlines()
@@ -258,7 +261,8 @@ def get_new_readme_entries_from_diff(diff: str, base_readme: str, head_readme: s
                 invalid_entries.append(f"line {added_line_number}: {content.strip()}")
             if match and in_community_plugins:
                 url = normalize_url(match.group(2))
-                if url not in base_urls and url not in seen_urls:
+                entry_identity = (match.group(1).strip(), url, match.group(6).strip())
+                if entry_identity not in base_entries and url not in seen_urls:
                     seen_urls.add(url)
                     entries.append(
                         Contribution(
@@ -288,7 +292,7 @@ def get_new_readme_entries_from_diff(diff: str, base_readme: str, head_readme: s
 
 
 def get_new_readme_entries(base_ref: str) -> list[Contribution]:
-    """Find newly added Community Plugins entries in the local README diff."""
+    """Find new or updated Community Plugins rows in the local README diff."""
 
     diff = git("diff", base_ref, "--", "README.md")
     if not diff or not README_PATH.exists():
@@ -544,7 +548,7 @@ def list_open_pull_requests(repository: str, pull_request_number: int | None) ->
 
 
 def entries_for_open_pull_request(repository: str, pull_request: OpenPullRequest) -> list[Contribution]:
-    """Extract new Community Plugin entries from a PR's exact base/head refs."""
+    """Extract new or updated Community Plugin rows from exact PR refs."""
 
     head_owner = pull_request.head_repository.split("/", maxsplit=1)[0]
     compare_ref = quote(
