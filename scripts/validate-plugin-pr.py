@@ -142,9 +142,11 @@ def load_manifest_from_archive(
 # ---------------------------------------------------------------------------
 
 
-def validate_manifest_fields(manifest: dict) -> list[str]:
-    """Validate manifest fields. Works for both local and fetched manifests."""
+def validate_manifest_fields(manifest: object) -> list[str]:
+    """Validate manifest fields, including an invalid JSON root shape."""
     errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return ["plugin.json must contain a JSON object"]
 
     for field in REQUIRED_MANIFEST_FIELDS:
         val = manifest.get(field)
@@ -195,6 +197,10 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
         return errors, warnings
 
     errors.extend(validate_manifest_fields(manifest))
+    # The manifest-field validator has already recorded these errors. Do not
+    # attempt interface/icon lookup on malformed JSON object shapes.
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("interface"), dict):
+        return errors, warnings
 
     # Validate icon locally
     interface = manifest.get("interface", {})
@@ -266,6 +272,8 @@ def validate_remote_repo(
         return errors, warnings
 
     errors.extend(validate_manifest_fields(manifest))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("interface"), dict):
+        return errors, warnings
 
     # Check icon exists in the archive
     interface = manifest.get("interface", {})
