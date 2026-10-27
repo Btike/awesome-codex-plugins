@@ -18,7 +18,7 @@ SPEC.loader.exec_module(VALIDATOR)
 class ReadmeEntryRegexTests(unittest.TestCase):
     def parse_new_entries(self, diff: str, base_readme: str, current_readme: str):
         with (
-            patch.object(VALIDATOR, "git", side_effect=(diff, base_readme)),
+            patch.object(VALIDATOR, "git", side_effect=(diff, "abc123mergebase", base_readme)),
             patch.object(Path, "read_text", return_value=current_readme),
         ):
             return VALIDATOR.get_new_readme_entries("origin/main")
@@ -152,6 +152,38 @@ class ReadmeEntryRegexTests(unittest.TestCase):
 
         fetch.assert_called_once_with("example", "plugin", "feat+plugin")
         self.assertTrue(any("does not contain" in error for error in errors))
+
+    def test_same_repository_added_on_both_branches_is_validated(self) -> None:
+        # A moving main tip may contain the URL even though the contributor
+        # independently introduced it relative to their actual fork point.
+        entry = "- [Shared](https://github.com/example/shared) - A new plugin."
+        diff = "diff --git a/README.md b/README.md\n+" + entry
+        ancestor_readme = "## Community Plugins\n"
+        current_readme = "## Community Plugins\n" + entry + "\n"
+        with (
+            patch.object(
+                VALIDATOR, "git",
+                side_effect=(diff, "123abcmergebase", ancestor_readme),
+            ) as git_mock,
+            patch.object(Path, "read_text", return_value=current_readme),
+        ):
+            entries = VALIDATOR.get_new_readme_entries("origin/main")
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["repo"], "shared")
+        self.assertEqual(git_mock.call_args_list[1].args,
+                         ("merge-base", "origin/main", "HEAD"))
+        self.assertEqual(git_mock.call_args_list[2].args,
+                         ("show", "123abcmergebase:README.md"))
+
+    def test_missing_merge_base_fails_closed(self) -> None:
+        entry = "- [Shared](https://github.com/example/shared) - Plugin."
+        with (
+            patch.object(VALIDATOR, "git", side_effect=("+" + entry, "")),
+            patch.object(Path, "read_text", return_value=entry),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "merge base"):
+                VALIDATOR.get_new_readme_entries("origin/main")
 
     def test_related_project_links_are_not_plugin_submissions(self) -> None:
         diff = "\n".join(
