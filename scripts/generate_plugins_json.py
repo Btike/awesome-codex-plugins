@@ -323,14 +323,10 @@ def collect_selected_paths(
                 if isinstance(screenshot, str):
                     add_recursive_selection(selected, all_names, plugin_root, screenshot)
 
-    # GitHub repository names are case-insensitive. Match the canonical
-    # source identity even if its README link uses different capitalization.
+    # GitHub resolves repository names regardless of capitalization.
     repo_key = f"{plugin['owner']}/{plugin['repo']}".casefold()
-    extra_paths = next(
-        (paths for key, paths in EXTRA_MIRROR_PATHS.items() if key.casefold() == repo_key),
-        (),
-    )
-    for extra_path in extra_paths:
+    source_paths = {key.casefold(): paths for key, paths in EXTRA_MIRROR_PATHS.items()}
+    for extra_path in source_paths.get(repo_key, ()):
         add_recursive_selection(selected, all_names, plugin_root, extra_path)
 
     # Context Guard's published .codexignore excludes transient build/cache
