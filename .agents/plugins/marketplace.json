@@ -2126,6 +2126,21 @@
       "description": "UI/UX design plugin for AI coding agents with product-flow routing, platform-native interface guidance, asset planning, and shipped-reference analysis before code."
     },
     {
+      "name": "steinwall",
+      "displayName": "SteinWall",
+      "source": {
+        "source": "local",
+        "path": "./plugins/maxxstm/steinwall"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Cost brake, action guard, loop rescue and extension scanner that run locally as Codex hooks.",
+      "icon": "./plugins/maxxstm/steinwall/assets/icon.svg"
+    },
+    {
       "name": "board",
       "displayName": "stickypane",
       "source": {
