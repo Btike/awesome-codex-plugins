@@ -72,6 +72,37 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             )
         ))
 
+    def test_context_guard_rejects_archive_traversal_before_replacing_bundle(self):
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            bundle = root / "GreenLv" / "codex-context-guard"
+            bundle.mkdir(parents=True)
+            sentinel = bundle / "keep.txt"
+            sentinel.write_text("preserve-existing-bundle", encoding="utf-8")
+
+            archive_bytes = io.BytesIO()
+            with zipfile.ZipFile(archive_bytes, "w") as source:
+                source.writestr(
+                    "codex-context-guard-main/.codex-plugin/plugin.json",
+                    '{"name":"context-guard","skills":"./skills/"}',
+                )
+                source.writestr("codex-context-guard-main/hooks/../../escape.txt", "unsafe")
+
+            archive_bytes.seek(0)
+            with zipfile.ZipFile(archive_bytes) as source, \
+                    patch.object(MODULE, "fetch_repo_archive", return_value=source), \
+                    patch.object(MODULE, "PLUGINS_ROOT", root):
+                with self.assertRaisesRegex(ValueError, "Unsafe mirrored archive path"):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve-existing-bundle")
+            self.assertFalse((root / "escape.txt").exists())
+
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
