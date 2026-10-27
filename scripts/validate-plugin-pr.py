@@ -172,6 +172,31 @@ def validate_manifest_fields(manifest: dict) -> list[str]:
     return errors
 
 
+
+
+def validate_icon_bytes(icon_rel: str, icon_data: bytes) -> list[str]:
+    """Apply the same icon checks to local files and remote source archives."""
+    errors: list[str] = []
+    suffix = PurePosixPath(icon_rel).suffix.lower()
+    if suffix not in ICON_EXTENSIONS:
+        errors.append(f"Icon has unsupported format '{suffix}'. Use SVG (preferred) or PNG.")
+    if len(icon_data) > MAX_ICON_SIZE_BYTES:
+        errors.append(f"Icon is {len(icon_data) / 1024:.1f}KB, exceeds 50KB limit.")
+    if suffix == ".svg":
+        content = icon_data.decode("utf-8", errors="replace")
+        # Only flag image data URIs used as resources, not harmless prose.
+        resource_uri = re.search(
+            r"(?:\b(?:xlink:)?href|\bsrc)\s*=\s*['\"]\s*data:image/"
+            r"|url\(\s*['\"]?\s*data:image/",
+            content,
+            re.IGNORECASE,
+        )
+        if resource_uri:
+            errors.append("SVG icon contains embedded base64 raster data.")
+        if "TODO" in content or "PLACEHOLDER" in content:
+            errors.append("SVG icon contains TODO/PLACEHOLDER text.")
+    return errors
+
 def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
     """Validate a committed plugin directory. Returns (errors, warnings)."""
     errors: list[str] = []
@@ -209,18 +234,7 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
         if not icon_path.exists():
             errors.append(f"Icon file not found: {icon_rel} (resolved to {icon_path.relative_to(REPO_ROOT)})")
         else:
-            suffix = icon_path.suffix.lower()
-            if suffix not in ICON_EXTENSIONS:
-                errors.append(f"Icon has unsupported format '{suffix}'. Use SVG (preferred) or PNG.")
-            size = icon_path.stat().st_size
-            if size > MAX_ICON_SIZE_BYTES:
-                errors.append(f"Icon is {size / 1024:.1f}KB, exceeds 50KB limit.")
-            if suffix == ".svg":
-                content = icon_path.read_text(encoding="utf-8", errors="replace")
-                if "data:image/" in content or "base64" in content:
-                    errors.append("SVG icon contains embedded base64 raster data.")
-                if "TODO" in content or "PLACEHOLDER" in content:
-                    errors.append("SVG icon contains TODO/PLACEHOLDER text.")
+            errors.extend(validate_icon_bytes(icon_rel, icon_path.read_bytes()))
 
     # README entry check (warning only)
     parts = plugin_dir.relative_to(REPO_ROOT).parts
@@ -277,19 +291,8 @@ def validate_remote_repo(
         elif icon_rel.startswith("/"):
             icon_rel = icon_rel[1:]
         icon_archive_path = plugin_root.joinpath(PurePosixPath(icon_rel)).as_posix()
-        suffix = PurePosixPath(icon_rel).suffix.lower()
-        if suffix not in ICON_EXTENSIONS:
-            errors.append(f"Icon has unsupported format '{suffix}'. Use SVG (preferred) or PNG.")
         try:
-            icon_data = archive.read(icon_archive_path)
-            if len(icon_data) > MAX_ICON_SIZE_BYTES:
-                errors.append(f"Icon is {len(icon_data) / 1024:.1f}KB, exceeds 50KB limit.")
-            if suffix == ".svg":
-                content = icon_data.decode("utf-8", errors="replace")
-                if "data:image/" in content or "base64" in content:
-                    errors.append("SVG icon contains embedded base64 raster data.")
-                if "TODO" in content or "PLACEHOLDER" in content:
-                    errors.append("SVG icon contains TODO/PLACEHOLDER text.")
+            errors.extend(validate_icon_bytes(icon_rel, archive.read(icon_archive_path)))
         except KeyError:
             errors.append(
                 f"Icon file not found in source repo at: {icon_rel} "
