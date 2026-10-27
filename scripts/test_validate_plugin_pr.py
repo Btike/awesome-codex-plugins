@@ -18,7 +18,7 @@ SPEC.loader.exec_module(VALIDATOR)
 class ReadmeEntryRegexTests(unittest.TestCase):
     def parse_new_entries(self, diff: str, base_readme: str, current_readme: str):
         with (
-            patch.object(VALIDATOR, "git", side_effect=(diff, "abc123mergebase", base_readme)),
+            patch.object(VALIDATOR, "git", side_effect=(diff, "abc123mergebase", base_readme or "## Community Plugins\n")),
             patch.object(Path, "read_text", return_value=current_readme),
         ):
             return VALIDATOR.get_new_readme_entries("origin/main")
