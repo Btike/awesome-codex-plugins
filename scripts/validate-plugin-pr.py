@@ -136,7 +136,7 @@ def load_manifest_from_archive(
     manifest_name = plugin_root.joinpath(".codex-plugin", "plugin.json").as_posix()
     try:
         return json.loads(archive.read(manifest_name).decode("utf-8"))
-    except (KeyError, json.JSONDecodeError):
+    except (KeyError, UnicodeDecodeError, json.JSONDecodeError):
         return _UNREADABLE_MANIFEST
 
 
@@ -195,7 +195,7 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
 
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
         errors.append(f"plugin.json is not valid JSON: {e}")
         return errors, warnings
 
