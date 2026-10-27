@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import importlib.util
+import io
+import json
+import tempfile
+import zipfile
 from pathlib import Path
 import sys
 import unittest
@@ -172,6 +176,63 @@ class ReadmeEntryRegexTests(unittest.TestCase):
 
         self.assertEqual(entries, [])
 
+
+
+class MalformedManifestTests(unittest.TestCase):
+    """Malformed contributor manifests should produce errors, not tracebacks."""
+
+    @staticmethod
+    def valid_fields(interface: object) -> dict:
+        return {
+            "name": "demo",
+            "version": "1.0.0",
+            "description": "demo",
+            "repository": "https://github.com/maker/demo",
+            "license": "MIT",
+            "interface": interface,
+        }
+
+    def remote_errors(self, manifest: object) -> list[str]:
+        raw = io.BytesIO()
+        with zipfile.ZipFile(raw, "w") as out:
+            out.writestr("demo-main/.codex-plugin/plugin.json", json.dumps(manifest))
+        with zipfile.ZipFile(io.BytesIO(raw.getvalue())) as archive:
+            with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                errors, warnings = VALIDATOR.validate_remote_repo("maker", "demo")
+        self.assertEqual(warnings, [])
+        return errors
+
+    def test_non_object_remote_root_is_validation_error(self) -> None:
+        errors = self.remote_errors([])
+        self.assertIn("plugin.json must contain a JSON object", errors)
+
+    def test_null_remote_interface_is_validation_error(self) -> None:
+        errors = self.remote_errors(self.valid_fields(None))
+        self.assertIn("Missing or invalid 'interface' object in plugin.json", errors)
+
+    def test_non_object_local_root_is_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "demo"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            (bundle / ".codex-plugin" / "plugin.json").write_text("[]")
+            with patch.object(VALIDATOR, "REPO_ROOT", root):
+                errors, warnings = VALIDATOR.validate_local_bundle(bundle)
+        self.assertIn("plugin.json must contain a JSON object", errors)
+        self.assertEqual(warnings, [])
+
+    def test_null_local_interface_is_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "demo"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            (bundle / ".codex-plugin" / "plugin.json").write_text(
+                json.dumps(self.valid_fields(None))
+            )
+            with patch.object(VALIDATOR, "REPO_ROOT", root):
+                errors, warnings = VALIDATOR.validate_local_bundle(bundle)
+        self.assertIn("Missing or invalid 'interface' object in plugin.json", errors)
+        self.assertEqual(warnings, [])
 
 if __name__ == "__main__":
     unittest.main()
