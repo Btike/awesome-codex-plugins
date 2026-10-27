@@ -323,12 +323,19 @@ def collect_selected_paths(
                 if isinstance(screenshot, str):
                     add_recursive_selection(selected, all_names, plugin_root, screenshot)
 
-    for extra_path in EXTRA_MIRROR_PATHS.get(f"{plugin['owner']}/{plugin['repo']}", ()):
+    # GitHub repository names are case-insensitive. Match the canonical
+    # source identity even if its README link uses different capitalization.
+    repo_key = f"{plugin['owner']}/{plugin['repo']}".casefold()
+    extra_paths = next(
+        (paths for key, paths in EXTRA_MIRROR_PATHS.items() if key.casefold() == repo_key),
+        (),
+    )
+    for extra_path in extra_paths:
         add_recursive_selection(selected, all_names, plugin_root, extra_path)
 
     # Context Guard's published .codexignore excludes transient build/cache
     # artifacts. Never ship them merely because its hook runtime uses scripts/.
-    if f"{plugin['owner']}/{plugin['repo']}" == "GreenLv/codex-context-guard":
+    if repo_key == "greenlv/codex-context-guard":
         ignored_dirs = {
             ".codex", ".git", ".venv", "__pycache__",
             ".pytest_cache", ".ruff_cache", "build", "dist",
