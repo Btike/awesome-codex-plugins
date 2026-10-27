@@ -86,7 +86,7 @@ python3 -m pip download --only-binary=:all: --no-deps --dest .hol-plugin-scanner
 python3 -m pip hash .hol-plugin-scanner-dist/*.whl
 ```
 
-You need a score of **80/130** or higher with **no critical or high severity findings**. Save the output to include in your PR description.
+Catalog admission requires a **normalized centralized scan score of at least 75/100**. Raw local category points and individual finding severities are advisory, not separate admission gates. Local scan output is useful to include in your PR description but optional; the catalog-owned scan remains authoritative.
 
 ### Step 3: Verify your plugin repo has the required files
 
