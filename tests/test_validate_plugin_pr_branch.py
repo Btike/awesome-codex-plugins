@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +50,48 @@ class BranchAwareValidationTests(unittest.TestCase):
             urlopen.call_args.args[0].full_url,
             "https://github.com/SupportPages-io/wtfm/archive/refs/heads/codex-plugin.zip",
         )
+
+    def test_real_git_history_uses_common_ancestor_not_newer_main(self):
+        # Reproduces a fork created before main independently listed the
+        # same plugin. That name still belongs to the contributor diff.
+        with tempfile.TemporaryDirectory() as scratch:
+            repo = Path(scratch) / "repo"
+            repo.mkdir()
+
+            def git(*args):
+                return subprocess.run(
+                    ["git", "-C", str(repo), *args], check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+
+            git("init", "-b", "main")
+            git("config", "user.name", "Plugin validation test")
+            git("config", "user.email", "validation-test@example.invalid")
+            base = "## Community Plugins\n"
+            overlap = "- [Overlap](https://github.com/sample/overlap) - Plugin.\n"
+            main_only = "- [MainOnly](https://github.com/sample/main-only) - Plugin.\n"
+            readme = repo / "README.md"
+            readme.write_text(base, encoding="utf-8")
+            git("add", "README.md")
+            git("commit", "-m", "base")
+
+            git("switch", "-c", "contributor")
+            readme.write_text(base + overlap, encoding="utf-8")
+            git("add", "README.md")
+            git("commit", "-m", "contributor adds overlap")
+
+            git("switch", "main")
+            readme.write_text(base + overlap + main_only, encoding="utf-8")
+            git("add", "README.md")
+            git("commit", "-m", "main independently adds overlap and another plugin")
+            git("switch", "contributor")
+
+            with patch.object(MODULE, "REPO_ROOT", repo), patch.object(
+                MODULE, "README_PATH", readme
+            ):
+                entries = MODULE.get_new_readme_entries("main")
+
+        self.assertEqual([entry["repo"] for entry in entries], ["overlap"])
 
     def test_new_readme_entry_preserves_source_ref_for_validation(self):
         entry_line = (
