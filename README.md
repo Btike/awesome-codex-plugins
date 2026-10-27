@@ -51,7 +51,7 @@
 New plugin workflow:
 
 1. Create with `$plugin-creator`
-2. **Validate with [`plugin-scanner`](https://github.com/hashgraph-online/hol-guard)**. The catalog-owned centralized scan must report a normalized score ≥ 80/100 before merge.
+2. **Validate with [`plugin-scanner`](https://github.com/hashgraph-online/hol-guard)**. The catalog-owned centralized scan must report a normalized score ≥ 75/100 before merge.
 3. **Optionally gate your source repo with the [HOL scanner GitHub Action](https://github.com/hashgraph-online/ai-plugin-scanner-action)**. Catalog admission uses the centralized scan; source-repo scanner CI is recommended but not required.
 4. Ship or submit with confidence
 
@@ -68,7 +68,7 @@ All plugins submitted to **Awesome Codex Plugins** must pass the HOL AI Plugin S
 
 | Requirement  | Threshold                                      |
 | ------------ | ---------------------------------------------- |
-| **Centralized score** | ≥ 80 / 100 (normalized) |
+| **Centralized score** | ≥ 75 / 100 (normalized) |
 | **Source CI** | Optional; recommended for pre-submission feedback |
 | **Action status** | Advisory when the numeric centralized score is available |
 
