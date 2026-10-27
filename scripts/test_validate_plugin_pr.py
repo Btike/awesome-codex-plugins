@@ -219,7 +219,8 @@ class MultiPluginManifestTests(unittest.TestCase):
                 }
                 root = f"demo-main/plugins/{name}"
                 output.writestr(f"{root}/.codex-plugin/plugin.json", json.dumps(manifest))
-                output.writestr(f"{root}/assets/icon{suffix}", b"test")
+                if name == "alpha":
+                    output.writestr(f"{root}/assets/icon{suffix}", b"test")
         return zipfile.ZipFile(io.BytesIO(buffer.getvalue()))
 
     def test_validation_reaches_named_nested_manifest(self) -> None:
@@ -233,7 +234,7 @@ class MultiPluginManifestTests(unittest.TestCase):
                 )
         self.assertEqual(good, [])
         self.assertTrue(
-            any("unsupported format" in error for error in bad), bad
+            any("Icon file not found" in error for error in bad), bad
         )
 
     def test_unknown_nested_manifest_name_fails_closed(self) -> None:
