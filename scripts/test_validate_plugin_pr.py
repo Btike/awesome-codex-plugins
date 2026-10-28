@@ -525,6 +525,18 @@ class MultiPluginManifestTests(unittest.TestCase):
                 self.assertEqual(errors, [])
                 self.assertEqual(warnings, [])
 
+    def test_non_ascii_only_source_labels_do_not_collide(self) -> None:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as output:
+            output.writestr(
+                "demo-main/plugins/emoji/.codex-plugin/plugin.json",
+                json.dumps({"name": "🚀", "interface": {"displayName": "🔒"}}),
+            )
+        with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
+            self.assertIsNone(VALIDATOR.find_plugin_root(
+                archive, display_name="🦊", require_named_match=True,
+            ))
+
     def test_unknown_nested_manifest_name_fails_closed(self) -> None:
         with self.build_archive() as archive:
             with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
