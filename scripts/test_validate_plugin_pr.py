@@ -237,6 +237,30 @@ class MultiPluginManifestTests(unittest.TestCase):
             any("Icon file not found" in error for error in bad), bad
         )
 
+    def test_corrupt_unrelated_nested_manifest_does_not_crash_selection(self) -> None:
+        # A named valid bundle may share its repository archive with a
+        # corrupt unrelated manifest. Both ZIP integrity failures are handled.
+        for failure in (zipfile.BadZipFile("bad CRC"), EOFError("truncated")):
+            with self.subTest(failure=type(failure).__name__):
+                with self.build_archive() as archive:
+                    actual_read = archive.read
+
+                    def guarded_read(name, *args, **kwargs):
+                        if str(name).endswith(
+                            "/plugins/beta/.codex-plugin/plugin.json"
+                        ):
+                            raise failure
+                        return actual_read(name, *args, **kwargs)
+
+                    with patch.object(
+                        VALIDATOR, "fetch_repo_archive", return_value=archive
+                    ), patch.object(archive, "read", side_effect=guarded_read):
+                        errors, warnings = VALIDATOR.validate_remote_repo(
+                            "maker", "demo", display_name="Alpha"
+                        )
+                self.assertEqual(errors, [])
+                self.assertEqual(warnings, [])
+
     def test_unknown_nested_manifest_name_fails_closed(self) -> None:
         with self.build_archive() as archive:
             with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
