@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime
 import io
+import unicodedata
 import json
 import re
 import shutil
@@ -503,7 +504,7 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     # raw archive names differ. Reject before replacing a working bundle.
     folded_paths: dict[str, str] = {}
     for relative_path in sorted(selected_paths):
-        folded = relative_path.casefold()
+        folded = unicodedata.normalize("NFC", relative_path).casefold()
         previous = folded_paths.get(folded)
         if previous is not None and previous != relative_path:
             raise ValueError(
