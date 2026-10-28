@@ -93,13 +93,17 @@ EXTRA_MIRROR_PATHS = {
 
 
 def normalize_relative_path(value: str) -> str:
-    # Normalize backslashes to forward slashes
+    """Accept bundle-relative paths only, never archive traversal targets."""
     value = value.replace("\\", "/")
-    # Strip only a leading '/' or './' prefix, preserving dot-prefixed filenames like ".mcp.json"
-    if value.startswith('/'):
-        value = value[1:]
-    if value.startswith('./'):
+    # Manifest paths are untrusted source data. An absolute/parent path could
+    # otherwise select a ZIP member outside this bundle and write it outside
+    # the destination during mirroring. Keep dot-prefixed files intact.
+    if value.startswith("/") or any(ord(char) < 32 or ord(char) == 127 for char in value):
+        return ""
+    while value.startswith("./"):
         value = value[2:]
+    if ".." in PurePosixPath(value).parts:
+        return ""
     return value
 
 
@@ -227,6 +231,7 @@ def find_plugin_roots(names: set[str]) -> list[PurePosixPath]:
         PurePosixPath(name).parent.parent
         for name in sorted(names)
         if name.endswith("/.codex-plugin/plugin.json")
+        and normalize_relative_path(name) == name
     ]
 
 
@@ -311,7 +316,10 @@ def add_recursive_selection(
     for name in all_names:
         if name.startswith(prefix_with_slash):
             relative_name = PurePosixPath(name).relative_to(plugin_root).as_posix()
-            selected.add(relative_name)
+            # A malicious archive could include e.g. skills/../../other.
+            # Never copy such a member outside the mirrored plugin root.
+            if normalize_relative_path(relative_name) == relative_name:
+                selected.add(relative_name)
 
 
 def collect_selected_paths(
