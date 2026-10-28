@@ -131,6 +131,28 @@ def verify_archive_members(
                 pass
 
 
+
+def safe_mirrored_icon_path(local_root: Path, raw_icon: str) -> str | None:
+    """Return an existing in-bundle icon path; reject traversal and links out."""
+    value = raw_icon.strip()
+    if (not value or value.startswith(("/", "\\\\")) or ":" in value
+            or any(ord(char) < 32 or ord(char) == 127 for char in value)):
+        return None
+    while value.startswith("./"):
+        value = value[2:]
+    path = PurePosixPath(value)
+    if path.is_absolute() or ".." in path.parts or "\\\\" in value or path == PurePosixPath("."):
+        return None
+    candidate = local_root.joinpath(*path.parts)
+    try:
+        if not candidate.is_file():
+            return None
+        candidate.resolve(strict=True).relative_to(local_root.resolve(strict=True))
+    except (OSError, ValueError):
+        return None
+    return path.as_posix()
+
+
 def require_real_mirror_parents(root: Path, destination: Path) -> None:
     """Do not replace a mirrored bundle through a symlinked output directory."""
     if root.is_symlink():
