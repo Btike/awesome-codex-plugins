@@ -501,7 +501,8 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     # A corrupt source archive must not leave its old installation wiped.
     for relative_path in selected_paths:
         part = PurePosixPath(relative_path)
-        if part.is_absolute() or ".." in part.parts or "\\\\" in relative_path:
+        if (part.is_absolute() or ".." in part.parts
+            or "\\" in relative_path or ":" in relative_path):
             raise ValueError(f"Unsafe mirrored archive path: {relative_path!r}")
         archive_name = plugin_root.joinpath(part).as_posix()
         info = archive.getinfo(archive_name)
