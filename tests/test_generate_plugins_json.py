@@ -47,6 +47,9 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
 
         self.assertEqual(len(entries), 2)
         self.assertTrue(all(entry.get("_mirror_subpath") == "true" for entry in entries))
+        self.assertEqual({(entry["owner"], entry["repo"]) for entry in entries}, {
+            ("redfox-data", "redfox-agent-plugins"),
+        })
 
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
