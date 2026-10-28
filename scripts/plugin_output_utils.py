@@ -135,13 +135,13 @@ def verify_archive_members(
 def safe_mirrored_icon_path(local_root: Path, raw_icon: str) -> str | None:
     """Return an existing in-bundle icon path; reject traversal and links out."""
     value = raw_icon.strip()
-    if (not value or value.startswith(("/", "\\\\")) or ":" in value
+    if (not value or value.startswith(("/", chr(92))) or ":" in value
             or any(ord(char) < 32 or ord(char) == 127 for char in value)):
         return None
     while value.startswith("./"):
         value = value[2:]
     path = PurePosixPath(value)
-    if path.is_absolute() or ".." in path.parts or "\\\\" in value or path == PurePosixPath("."):
+    if path.is_absolute() or ".." in path.parts or chr(92) in value or path == PurePosixPath("."):
         return None
     candidate = local_root.joinpath(*path.parts)
     try:
