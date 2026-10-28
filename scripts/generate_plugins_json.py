@@ -26,7 +26,7 @@ from urllib.parse import quote, unquote
 
 # Both direct script execution and importlib-based tests load this helper.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plugin_output_utils import prune_unlisted_bundles, require_real_mirror_parents, sanitize_metadata_only_manifest, verify_archive_members, write_json
+from plugin_output_utils import prune_unlisted_bundles, require_real_mirror_parents, safe_mirrored_icon_path, sanitize_metadata_only_manifest, verify_archive_members, write_json
 
 README = Path(__file__).parent.parent / "README.md"
 OUTPUT = Path(__file__).parent.parent / "plugins.json"
@@ -498,20 +498,13 @@ def main() -> None:
                 # Thread 1 fix: reject placeholder values like "[TODO: ./assets/icon.png]"
                 stripped = composer_icon.strip()
                 if not (stripped.startswith('[') and ('TODO' in stripped or 'PLACEHOLDER' in stripped)):
-                    # Properly strip leading "./" or "/" only, preserving dot-prefixed filenames like ".mcp.json"
-                    rel = composer_icon
-                    if rel.startswith('./'):
-                        rel = rel[2:]
-                    elif rel.startswith('/'):
-                        rel = rel[1:]
-                    candidate = f"{marketplace_path}/{rel}"
-                    # Verify the file exists in the mirrored plugin directory
+                    # Only publish paths that resolve to an actual mirrored icon.
                     local_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
                     if plugin.get("_mirror_subpath") == "true" and plugin_root_relative:
                         local_root = local_root / PurePosixPath(plugin_root_relative)
-                    abs_path = local_root / rel
-                    if abs_path.exists():
-                        icon_path = candidate
+                    rel = safe_mirrored_icon_path(local_root, composer_icon)
+                    if rel is not None:
+                        icon_path = f"{marketplace_path}/{rel}"
 
         mirrored_entries.append(build_marketplace_entry(plugin, manifest, marketplace_path, icon_path))
 
