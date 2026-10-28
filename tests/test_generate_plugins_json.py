@@ -645,6 +645,25 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                 )
 
 
+    def test_named_bundle_never_uses_directory_only_as_source_identity(self):
+        # A directory slug can match the README while the canonical manifest
+        # declares another plugin. Do not publish the wrong bundle under it.
+        with self.archive_for([("alpha", "unrelated"), ("beta", "beta")]) as archive:
+            names = set(archive.namelist())
+            with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, names,
+                    {"name": "alpha", "_mirror_subpath": "true"},
+                )
+            self.assertEqual(
+                MODULE.resolve_plugin_root(
+                    archive, names,
+                    {"name": "unrelated", "_mirror_subpath": "true"},
+                ).as_posix(),
+                "demo-main/plugins/alpha",
+            )
+
+
 
 class UntrustedArchivePathTests(unittest.TestCase):
     def test_manifest_paths_reject_escape_and_absolute_locations(self):
