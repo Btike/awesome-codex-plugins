@@ -560,6 +560,29 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                         {"name": "beta", "_mirror_subpath": "true"},
                     )
 
+    def test_unrelated_deflate_error_does_not_hide_valid_nested_plugin(self):
+        import zlib
+
+        with self.archive_for([("alpha", "alpha"), ("beta", "beta")]) as archive:
+            original_read = archive.read
+
+            def bad_deflate(name, *args, **kwargs):
+                if str(name).endswith("/plugins/beta/.codex-plugin/plugin.json"):
+                    raise zlib.error("invalid distance too far back")
+                return original_read(name, *args, **kwargs)
+
+            with patch.object(archive, "read", side_effect=bad_deflate):
+                roots = set(archive.namelist())
+                selected = MODULE.resolve_plugin_root(
+                    archive, roots, {"name": "alpha", "_mirror_subpath": "true"},
+                )
+                self.assertEqual(selected.as_posix(), "demo-main/plugins/alpha")
+                # The corrupt target itself must still fail closed.
+                with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                    MODULE.resolve_plugin_root(
+                        archive, roots, {"name": "beta", "_mirror_subpath": "true"},
+                    )
+
     def test_short_description_is_not_a_bundle_identifier(self):
         import json
 
