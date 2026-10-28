@@ -284,6 +284,49 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                 "demo-main/plugins/alpha",
             )
 
+    def test_unrelated_corrupt_manifest_does_not_block_named_bundle(self):
+        import zipfile
+
+        with self.archive_for([("alpha", "alpha"), ("beta", "beta")]) as archive:
+            real_read = archive.read
+
+            def corrupt_other(name, *args, **kwargs):
+                if str(name).endswith("/plugins/beta/.codex-plugin/plugin.json"):
+                    raise zipfile.BadZipFile("unrelated corrupt manifest")
+                return real_read(name, *args, **kwargs)
+
+            with patch.object(archive, "read", side_effect=corrupt_other):
+                selected = MODULE.resolve_plugin_root(
+                    archive, set(archive.namelist()),
+                    {"name": "alpha", "_mirror_subpath": "true"},
+                )
+                self.assertEqual(selected.as_posix(), "demo-main/plugins/alpha")
+                with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                    MODULE.resolve_plugin_root(
+                        archive, set(archive.namelist()),
+                        {"name": "beta", "_mirror_subpath": "true"},
+                    )
+
+    def test_short_description_is_not_a_bundle_identifier(self):
+        import json
+
+        with self.archive_for([("alpha", "alpha"), ("beta", "beta")]) as archive:
+            real_read = archive.read
+
+            def overlapping_prose(name, *args, **kwargs):
+                if str(name).endswith("/plugins/beta/.codex-plugin/plugin.json"):
+                    return json.dumps({"name": "beta", "interface": {
+                        "displayName": "Beta", "shortDescription": "alpha",
+                    }}).encode("utf-8")
+                return real_read(name, *args, **kwargs)
+
+            with patch.object(archive, "read", side_effect=overlapping_prose):
+                selected = MODULE.resolve_plugin_root(
+                    archive, set(archive.namelist()),
+                    {"name": "alpha", "_mirror_subpath": "true"},
+                )
+            self.assertEqual(selected.as_posix(), "demo-main/plugins/alpha")
+
     def test_single_nested_manifest_must_match_each_shared_repo_listing(self):
         with self.archive_for([("alpha", "alpha")]) as archive:
             names = set(archive.namelist())
