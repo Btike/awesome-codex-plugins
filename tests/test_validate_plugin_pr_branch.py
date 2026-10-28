@@ -213,6 +213,42 @@ class BranchAwareValidationTests(unittest.TestCase):
         self.assertEqual(changed, [bundle])
         self.assertTrue(any("Plugin directory does not exist" in e for e in errors))
 
+    def test_renamed_manifest_still_fails_closed(self):
+        # Git normally reports a move as R with only the destination path.
+        # --no-renames must expose the old manifest as a deletion.
+        with tempfile.TemporaryDirectory() as scratch:
+            repo = Path(scratch) / "repo"
+            repo.mkdir()
+
+            def git(*args):
+                return subprocess.run(
+                    ["git", "-C", str(repo), *args],
+                    check=True, capture_output=True, text=True,
+                ).stdout.strip()
+
+            git("init", "-b", "main")
+            git("config", "user.name", "Plugin validation test")
+            git("config", "user.email", "validation-test@example.invalid")
+            bundle = repo / "plugins" / "contributor" / "bundle"
+            manifest = bundle / ".codex-plugin" / "plugin.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text('{"name":"bundle"}', encoding="utf-8")
+            git("add", "plugins")
+            git("commit", "-m", "original bundle")
+            git("switch", "-c", "rename-manifest")
+            git("mv", "plugins/contributor/bundle/.codex-plugin/plugin.json",
+                "plugins/contributor/bundle/renamed.json")
+            git("commit", "-m", "rename manifest")
+
+            with patch.object(MODULE, "REPO_ROOT", repo), patch.object(
+                MODULE, "PLUGINS_DIR", repo / "plugins"
+            ):
+                changed = MODULE.get_changed_plugin_dirs("main")
+                errors, _ = MODULE.validate_local_bundle(bundle)
+
+        self.assertEqual(changed, [bundle])
+        self.assertTrue(any("Missing .codex-plugin/plugin.json" in e for e in errors))
+
     def test_new_readme_entry_preserves_source_ref_for_validation(self):
         entry_line = (
             "- [WTFM](https://github.com/SupportPages-io/wtfm/tree/codex-plugin) "
