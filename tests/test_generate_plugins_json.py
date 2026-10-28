@@ -798,9 +798,13 @@ class BranchAwareSourceTests(unittest.TestCase):
                 MODULE.safe_mirrored_icon_path(root, "./assets/icon.svg"),
                 "assets/icon.svg",
             )
+            self.assertEqual(
+                MODULE.safe_mirrored_icon_path(root, "/assets/icon.svg"),
+                "assets/icon.svg",
+            )
             for unsafe in (
                 "", ".", "../outside.svg", "../../../../outside.svg",
-                "/etc/passwd", "C:/Windows/system.ini",
+                "//other/share/icon.svg", "/etc/passwd", "C:/Windows/system.ini",
                 "assets/../icon.svg", "assets\\icon.svg",
                 "./assets/icon.svg\\extra", "assets/missing.svg",
                 "assets/icon.svg\x00",
