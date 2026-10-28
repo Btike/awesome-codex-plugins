@@ -237,6 +237,36 @@ class MultiPluginManifestTests(unittest.TestCase):
             any("Icon file not found" in error for error in bad), bad
         )
 
+    def test_one_source_manifest_cannot_validate_two_distinct_names(self) -> None:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as output:
+            root = "demo-main/plugins/alpha"
+            output.writestr(f"{root}/.codex-plugin/plugin.json", json.dumps({
+                "name": "alpha", "version": "1.0.0",
+                "description": "Example",
+                "repository": "https://github.com/maker/demo",
+                "license": "MIT",
+                "interface": {
+                    "displayName": "Alpha", "shortDescription": "Example",
+                    "composerIcon": "./assets/icon.png",
+                },
+            }))
+            output.writestr(f"{root}/assets/icon.png", b"image")
+        with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
+            with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                good, _ = VALIDATOR.validate_remote_repo(
+                    "maker", "demo", display_name="Alpha", require_named_match=True
+                )
+                bad, _ = VALIDATOR.validate_remote_repo(
+                    "maker", "demo", display_name="Another Plugin", require_named_match=True
+                )
+                legacy, _ = VALIDATOR.validate_remote_repo(
+                    "maker", "demo", display_name="Legacy Branding"
+                )
+        self.assertEqual(good, [])
+        self.assertTrue(any("uniquely matching manifest" in x for x in bad), bad)
+        self.assertEqual(legacy, [])
+
     def test_corrupt_unrelated_nested_manifest_does_not_crash_selection(self) -> None:
         # A named valid bundle may share its repository archive with a
         # corrupt unrelated manifest. Both ZIP integrity failures are handled.
