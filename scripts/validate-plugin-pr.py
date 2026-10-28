@@ -136,7 +136,7 @@ def load_manifest_from_archive(
     manifest_name = plugin_root.joinpath(".codex-plugin", "plugin.json").as_posix()
     try:
         return json.loads(archive.read(manifest_name).decode("utf-8"))
-    except (KeyError, UnicodeDecodeError, json.JSONDecodeError):
+    except (KeyError, UnicodeDecodeError, json.JSONDecodeError, zipfile.BadZipFile, EOFError):
         return _UNREADABLE_MANIFEST
 
 
