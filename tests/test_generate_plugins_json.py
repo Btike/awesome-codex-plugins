@@ -1,5 +1,8 @@
 import importlib.util
 import tempfile
+import io
+import json
+import zipfile
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -195,6 +198,38 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     MODULE.prune_unlisted_bundles(root, [{"owner": "uizze", "repo": "uizze"}])
                 self.assertEqual((retired / "SKILL.md").read_text(), "preserve-until-preflight-completes")
+
+
+class XbergCatalogSourceSelectionTests(unittest.TestCase):
+    def test_five_current_xberg_names_resolve_five_distinct_manifests(self):
+        # The retired Kreuzberg labels all previously resolved to crawlberg.
+        # Each current source-backed README label must select its own bundle.
+        source_names = (
+            ("Xberg", "xberg"),
+            ("Crawlberg", "crawlberg"),
+            ("html-to-markdown", "html-to-markdown"),
+            ("Liter-LLM", "liter-llm"),
+            ("Tree-Sitter Language Pack", "tree-sitter-language-pack"),
+        )
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as writer:
+            for display, slug in source_names:
+                writer.writestr(
+                    f"source-main/plugins/{slug}/.codex-plugin/plugin.json",
+                    json.dumps({"name": slug, "interface": {"displayName": display}}),
+                )
+        with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
+            paths = set(archive.namelist())
+            chosen = {
+                MODULE.resolve_plugin_root(
+                    archive, paths,
+                    {"name": display, "owner": "xberg-io", "repo": "plugins"},
+                ).as_posix()
+                for display, _ in source_names
+            }
+        self.assertEqual(chosen, {
+            f"source-main/plugins/{slug}" for _, slug in source_names
+        })
 
 
 class BranchAwareSourceTests(unittest.TestCase):
