@@ -270,6 +270,14 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
             continue
         if not isinstance(manifest, dict):
             continue
+        # Every separate Codex marketplace entry needs its own canonical
+        # source manifest identity. Matching only a display label from a
+        # nameless manifest would publish duplicate repository-name IDs.
+        if plugin.get("_mirror_subpath") == "true" and not (
+            isinstance(manifest.get("name"), str)
+            and manifest["name"].strip()
+        ):
+            continue
         interface = manifest.get("interface", {})
         if plugin.get("_mirror_subpath") == "true":
             # Folder names alone do not prove a separately publishable plugin.
