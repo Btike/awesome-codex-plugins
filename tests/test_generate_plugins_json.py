@@ -254,6 +254,42 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve-existing-bundle")
             self.assertFalse((root / "escape.txt").exists())
 
+    def test_colon_archive_member_cannot_replace_existing_bundle(self):
+        # A colon can designate a Windows alternate data stream; untrusted
+        # archive paths must fail before an existing plugin is removed.
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            bundle = root / "GreenLv" / "codex-context-guard"
+            bundle.mkdir(parents=True)
+            sentinel = bundle / "keep.txt"
+            sentinel.write_text("previous working plugin", encoding="utf-8")
+
+            data = io.BytesIO()
+            with zipfile.ZipFile(data, "w") as writer:
+                writer.writestr(
+                    "codex-context-guard-main/.codex-plugin/plugin.json",
+                    '{"name":"context-guard","skills":"./scripts"}',
+                )
+                writer.writestr(
+                    "codex-context-guard-main/scripts/hook:alternate.py", "payload"
+                )
+            data.seek(0)
+            with (
+                zipfile.ZipFile(data) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(ValueError, "Unsafe mirrored archive path"):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "previous working plugin"
+            )
+
     def test_selected_source_symlink_preserves_existing_mirror(self):
         import io
         import stat
