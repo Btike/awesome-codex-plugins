@@ -239,6 +239,41 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve-existing-bundle")
             self.assertFalse((root / "escape.txt").exists())
 
+    def test_selected_source_symlink_preserves_existing_mirror(self):
+        import io
+        import stat
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            mirror = root / "GreenLv" / "codex-context-guard"
+            mirror.mkdir(parents=True)
+            sentinel = mirror / "previous-working-bundle.txt"
+            sentinel.write_text("keep existing install", encoding="utf-8")
+            contents = io.BytesIO()
+            with zipfile.ZipFile(contents, "w") as generated:
+                generated.writestr(
+                    "codex-context-guard-main/.codex-plugin/plugin.json",
+                    '{"name":"context-guard","skills":"./skills/"}',
+                )
+                hook = zipfile.ZipInfo("codex-context-guard-main/hooks/hooks.json")
+                hook.create_system = 3
+                hook.external_attr = (stat.S_IFLNK | 0o777) << 16
+                generated.writestr(hook, "../../outside.json")
+            contents.seek(0)
+
+            with zipfile.ZipFile(contents) as archive, \
+                    patch.object(MODULE, "fetch_repo_archive", return_value=archive), \
+                    patch.object(MODULE, "PLUGINS_ROOT", root):
+                with self.assertRaisesRegex(ValueError, "Selected source file is a symlink"):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "keep existing install"
+            )
+
     def test_corrupt_selected_zip_member_preserves_existing_mirror(self):
         import io
         import zipfile
