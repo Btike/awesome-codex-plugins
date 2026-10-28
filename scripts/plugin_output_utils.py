@@ -17,6 +17,42 @@ def write_json(path: Path, data: dict[str, object]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def sanitize_metadata_only_manifest(manifest: dict[str, object], plugin: dict[str, str]) -> dict[str, object]:
+    sanitized = json.loads(json.dumps(manifest))
+
+    for key in ("skills", "commands", "hooks", "apps", "app", "appConfig"):
+        sanitized.pop(key, None)
+
+    if f"{plugin['owner']}/{plugin['repo']}" == "mturac/everything-openai-codex":
+        repo_url = "https://github.com/mturac/everything-openai-codex"
+        sanitized["description"] = (
+            "Open-source Codex workflow collection with install profiles, repo "
+            "conventions, validation checks, and documentation."
+        )
+        sanitized["author"] = {
+            "name": "Mehmet Turac",
+            "url": "https://github.com/mturac",
+        }
+        sanitized["homepage"] = repo_url
+
+        interface = sanitized.setdefault("interface", {})
+        if isinstance(interface, dict):
+            interface["shortDescription"] = (
+                "Codex workflow collection with install profiles, repo conventions, "
+                "validation checks, and documentation."
+            )
+            interface["longDescription"] = (
+                "Everything OpenAI Codex (EOC) is a community-maintained Codex "
+                "workflow collection. The upstream repository contains the full "
+                "documentation, install profiles, skills, commands, and validation material."
+            )
+            interface["developerName"] = "Mehmet Turac"
+            interface["category"] = "Coding"
+            interface["websiteURL"] = repo_url
+
+    return sanitized
+
+
 def prune_unlisted_bundles(root: Path, plugins: list[dict[str, str]]) -> list[str]:
     """Remove only explicitly reviewed retirements that are absent from README.
 
