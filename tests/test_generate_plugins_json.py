@@ -161,6 +161,48 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 MODULE.main()
                 mirror.assert_not_called()
 
+    def test_failed_sibling_bundle_does_not_remove_valid_public_record(self):
+        # Multi-plugin sources can have one corrupt nested manifest. Only
+        # that bundle should disappear from the generated public catalog.
+        import json
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            readme = root / "README.md"
+            readme.write_text(
+                "## Community Plugins\n"
+                "- [Alpha](https://github.com/example/shared) - Works.\n"
+                "- [Beta](https://github.com/example/shared) - Broken.\n",
+                encoding="utf-8",
+            )
+
+            def mirror_one(plugin):
+                if plugin["name"] == "Beta":
+                    raise ValueError("corrupt nested manifest")
+                return (
+                    {"name": "alpha", "interface": {}},
+                    "./plugins/example/shared/plugins/alpha",
+                    "plugins/alpha",
+                )
+
+            with (
+                patch.multiple(
+                    MODULE, README=readme, PLUGINS_ROOT=root / "plugins",
+                    OUTPUT=root / "plugins.json",
+                    MARKETPLACE_OUTPUT=root / "marketplace.json",
+                ),
+                patch.object(MODULE, "mirror_plugin_bundle", side_effect=mirror_one),
+            ):
+                MODULE.main()
+            public = json.loads((root / "plugins.json").read_text())
+            marketplace = json.loads((root / "marketplace.json").read_text())
+
+        self.assertEqual(public["total"], 1)
+        self.assertEqual([p["name"] for p in public["plugins"]], ["Alpha"])
+        self.assertEqual(
+            [p["displayName"] for p in marketplace["plugins"]], ["Alpha"]
+        )
+
     def test_partial_parse_aborts_before_any_deletion(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch) / "plugins"
