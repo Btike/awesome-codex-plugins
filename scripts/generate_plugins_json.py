@@ -223,7 +223,7 @@ def fetch_repo_archive(owner: str, repo: str, source_ref: str | None = None) -> 
 
 
 def normalize_match_key(value: object) -> str:
-    return re.sub(r"[^a-z0-9]+", "", str(value or "").casefold())
+    return re.sub(r"[\W_]+", "", str(value or "").casefold())
 
 
 def find_plugin_roots(names: set[str]) -> list[PurePosixPath]:
