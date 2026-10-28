@@ -5,6 +5,7 @@ Kept separate from the marketplace generator to preserve the 500-line source lim
 
 from pathlib import Path, PurePosixPath
 import json
+import unicodedata
 import shutil
 import stat
 import zipfile
@@ -63,7 +64,7 @@ def verify_archive_members(
     # so fail before deleting the previous published bundle.
     casefolded_paths: dict[str, str] = {}
     for relative_path in sorted(selected_paths):
-        folded = relative_path.casefold()
+        folded = unicodedata.normalize("NFC", relative_path).casefold()
         previous = casefolded_paths.get(folded)
         if previous is not None and previous != relative_path:
             raise ValueError(
