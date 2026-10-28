@@ -76,6 +76,21 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             )
         ))
 
+    def test_manifest_dot_scripts_does_not_mirror_entire_source(self):
+        # A source manifest naming "." as its scripts directory is not a
+        # license to copy the entire upstream repository into the catalog.
+        root = PurePosixPath("source-main")
+        names = {
+            "source-main/.codex-plugin/plugin.json",
+            "source-main/private/secret.txt",
+            "source-main/scripts/launch.py",
+        }
+        paths = MODULE.collect_selected_paths(
+            {"name": "demo", "scripts": "."},
+            names, root, {"owner": "example", "repo": "demo"},
+        )
+        self.assertEqual(paths, {".codex-plugin/plugin.json"})
+
     def test_context_guard_runtime_mirror_accepts_github_link_case_variations(self):
         # GitHub resolves owner/repository names case-insensitively. A README
         # link with alternate casing must not omit the published hook runtime.
