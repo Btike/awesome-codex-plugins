@@ -18,6 +18,7 @@ import io
 import json
 import re
 import shutil
+import stat
 import sys
 import urllib.request
 import zipfile
@@ -471,6 +472,12 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
         if part.is_absolute() or ".." in part.parts or "\\\\" in relative_path:
             raise ValueError(f"Unsafe mirrored archive path: {relative_path!r}")
         archive_name = plugin_root.joinpath(part).as_posix()
+        info = archive.getinfo(archive_name)
+        # Git stores symlink entries as link-target text in ZIP archives.
+        # Copying that text as a regular file creates a broken runnable
+        # plugin; following its target could escape the selected bundle.
+        if info.create_system == 3 and stat.S_ISLNK(info.external_attr >> 16):
+            raise ValueError(f"Selected source file is a symlink: {relative_path!r}")
         with archive.open(archive_name) as member:
             while member.read(1024 * 1024):
                 pass
