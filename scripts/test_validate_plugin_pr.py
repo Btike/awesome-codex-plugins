@@ -482,6 +482,26 @@ class MultiPluginManifestTests(unittest.TestCase):
             any("Icon file not found" in error for error in bad), bad
         )
 
+    def test_casefolded_name_selects_same_bundle_as_generator(self) -> None:
+        # The validator and mirror generator must agree on non-ASCII
+        # casefolded labels rather than selecting different nested manifests.
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as output:
+            output.writestr(
+                "demo-main/plugins/strasse/.codex-plugin/plugin.json",
+                json.dumps({"name": "STRASSE"}),
+            )
+            output.writestr(
+                "demo-main/plugins/other/.codex-plugin/plugin.json",
+                json.dumps({"name": "other"}),
+            )
+        with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
+            selected = VALIDATOR.find_plugin_root(
+                archive, display_name="Straße", require_named_match=True,
+            )
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected.as_posix(), "demo-main/plugins/strasse")
+
     def test_one_source_manifest_cannot_validate_two_distinct_names(self) -> None:
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as output:
