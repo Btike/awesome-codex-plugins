@@ -264,11 +264,17 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
         if not isinstance(manifest, dict):
             continue
         interface = manifest.get("interface", {})
-        candidates = [
-            manifest.get("name"),
-            root.name,
-            plugin_root_relative_path(root).split("/")[-1],
-        ]
+        if plugin.get("_mirror_subpath") == "true":
+            # Folder names alone do not prove a separately publishable plugin.
+            # Match the source manifest's declared name or display name.
+            candidates = [manifest.get("name")]
+        else:
+            # Retain legacy single-repository umbrella matching behavior.
+            candidates = [
+                manifest.get("name"),
+                root.name,
+                plugin_root_relative_path(root).split("/")[-1],
+            ]
         if isinstance(interface, dict):
             # The short description is prose, not a unique source identity.
             candidates.append(interface.get("displayName"))
