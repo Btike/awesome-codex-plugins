@@ -502,6 +502,26 @@ class MultiPluginManifestTests(unittest.TestCase):
         self.assertIsNotNone(selected)
         self.assertEqual(selected.as_posix(), "demo-main/plugins/strasse")
 
+    def test_nonlatin_manifest_name_matches_generator(self) -> None:
+        # A Unicode source name must select one verified nested manifest,
+        # not collapse to an empty ASCII-only lookup key.
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as output:
+            output.writestr(
+                "demo-main/plugins/video/.codex-plugin/plugin.json",
+                json.dumps({"name": "视频下载"}, ensure_ascii=False),
+            )
+            output.writestr(
+                "demo-main/plugins/other/.codex-plugin/plugin.json",
+                json.dumps({"name": "other"}),
+            )
+        with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
+            selected = VALIDATOR.find_plugin_root(
+                archive, display_name="视频下载", require_named_match=True,
+            )
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected.as_posix(), "demo-main/plugins/video")
+
     def test_one_source_manifest_cannot_validate_two_distinct_names(self) -> None:
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as output:
