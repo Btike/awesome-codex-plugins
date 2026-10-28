@@ -123,6 +123,50 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
 
         self.assertEqual(paths, {".codex-plugin/plugin.json"})
 
+    def test_context_guard_symlinked_owner_cannot_overwrite_external_bundle(self):
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            root.mkdir()
+            outside = Path(scratch) / "outside"
+            bundle = outside / "codex-context-guard"
+            bundle.mkdir(parents=True)
+            sentinel = bundle / "keep.txt"
+            sentinel.write_text("external bundle untouched", encoding="utf-8")
+            (root / "GreenLv").symlink_to(outside, target_is_directory=True)
+
+            source_bytes = io.BytesIO()
+            with zipfile.ZipFile(source_bytes, "w") as generated:
+                generated.writestr(
+                    "codex-context-guard-main/.codex-plugin/plugin.json",
+                    '{"name":"context-guard"}',
+                )
+            source_bytes.seek(0)
+            with zipfile.ZipFile(source_bytes) as archive, \\
+                    patch.object(MODULE, "fetch_repo_archive", return_value=archive), \\
+                    patch.object(MODULE, "PLUGINS_ROOT", root):
+                with self.assertRaisesRegex(ValueError, "symlink"):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "external bundle untouched"
+            )
+
+    def test_mirror_destination_rejects_symlinked_plugins_root(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root_target = Path(scratch) / "real-root"
+            root_target.mkdir()
+            symlinked_root = Path(scratch) / "plugins"
+            symlinked_root.symlink_to(root_target, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "root must not be a symlink"):
+                MODULE.require_real_mirror_parents(
+                    symlinked_root, symlinked_root / "GreenLv" / "codex-context-guard"
+                )
+
     def test_context_guard_rejects_archive_traversal_before_replacing_bundle(self):
         import io
         import zipfile
