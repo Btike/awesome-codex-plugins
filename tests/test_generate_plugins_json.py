@@ -146,6 +146,40 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 sentinel.read_text(encoding="utf-8"), "previous working install"
             )
 
+    def test_unicode_normalization_zip_member_collision_preserves_bundle(self):
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            bundle = root / "maker" / "demo"
+            bundle.mkdir(parents=True)
+            sentinel = bundle / "existing.txt"
+            sentinel.write_text("previous working install", encoding="utf-8")
+            content = io.BytesIO()
+            with zipfile.ZipFile(content, "w") as writer:
+                writer.writestr(
+                    "demo-main/.codex-plugin/plugin.json",
+                    '{"name":"demo","scripts":"./scripts","interface":{}}',
+                )
+                writer.writestr("demo-main/scripts/caf\u00e9.py", "first")
+                writer.writestr("demo-main/scripts/cafe\u0301.py", "second")
+            content.seek(0)
+            with (
+                zipfile.ZipFile(content) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(
+                    ValueError, "Case-insensitive selected archive path collision"
+                ):
+                    MODULE.mirror_plugin_bundle({
+                        "name": "demo", "owner": "maker", "repo": "demo",
+                    })
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "previous working install"
+            )
+
     def test_mirror_rejects_selected_zip_symlink_before_replacement(self):
         import io
         import zipfile
