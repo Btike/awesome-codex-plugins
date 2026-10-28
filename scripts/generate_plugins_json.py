@@ -98,7 +98,11 @@ def normalize_relative_path(value: str) -> str:
     # Manifest paths are untrusted source data. An absolute/parent path could
     # otherwise select a ZIP member outside this bundle and write it outside
     # the destination during mirroring. Keep dot-prefixed files intact.
-    if value.startswith("/") or any(ord(char) < 32 or ord(char) == 127 for char in value):
+    # A colon can denote a drive or alternate data stream on Windows even
+    # when the same spelling looks relative to PurePosixPath on Linux.
+    if value.startswith("/") or ":" in value or any(
+        ord(char) < 32 or ord(char) == 127 for char in value
+    ):
         return ""
     while value.startswith("./"):
         value = value[2:]
@@ -431,8 +435,8 @@ def require_safe_mirror_destination(root: Path, destination: Path) -> None:
         raise ValueError("Mirror destination is outside generated plugins root") from exc
     current = root
     for part in parts:
-        if part in {".", ".."}:
-            raise ValueError("Mirrored bundle path contains traversal")
+        if part in {".", ".."} or ":" in part:
+            raise ValueError("Mirrored bundle path contains traversal or drive syntax")
         current = current / part
         if current.is_symlink():
             raise ValueError(f"Mirrored bundle path must not follow a symlink: {current}")
