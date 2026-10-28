@@ -124,7 +124,7 @@ def parse_plugins(readme_path: Path) -> list[dict[str, str]]:
     plugins: list[dict[str, str]] = []
     local_plugins: list[dict[str, str]] = []
     current_category = "Uncategorized"
-    seen: set[str] = set()
+    seen: set[tuple[str, str, str, str]] = set()
 
     for line in section:
         category_match = re.match(r"^### (.+)", line.strip())
@@ -155,7 +155,11 @@ def parse_plugins(readme_path: Path) -> list[dict[str, str]]:
         owner, repo = plugin_match.group(3), plugin_match.group(4)
         repo = repo.removesuffix(".git")
         source_ref = unquote(plugin_match.group(5)) if plugin_match.group(5) else None
-        key = f"{owner}/{repo}/{source_ref or ''}/{plugin_match.group(1)}"
+        # Alias spelling/casing must not mirror the same upstream manifest twice.
+        # Keep source_ref distinct because two branches may hold different bundles.
+        display_name = plugin_match.group(1)
+        canonical_name = normalize_match_key(display_name) or display_name.strip().casefold()
+        key = (owner.casefold(), repo.casefold(), source_ref or "", canonical_name)
         if key in seen:
             continue
         seen.add(key)
