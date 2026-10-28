@@ -442,6 +442,17 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     )
     mirrored_manifest = sanitize_metadata_only_manifest(manifest, plugin) if metadata_only else manifest
 
+    # Preflight selected ZIP members before deleting a previously working mirror.
+    # A corrupt source archive must not leave its old installation wiped.
+    for relative_path in selected_paths:
+        part = PurePosixPath(relative_path)
+        if part.is_absolute() or ".." in part.parts or "\\\\" in relative_path:
+            raise ValueError(f"Unsafe mirrored archive path: {relative_path!r}")
+        archive_name = plugin_root.joinpath(part).as_posix()
+        with archive.open(archive_name) as member:
+            while member.read(1024 * 1024):
+                pass
+
     plugin_root_relative = plugin_root_relative_path(plugin_root)
     use_subpath = plugin.get("_mirror_subpath") == "true"
     destination_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
