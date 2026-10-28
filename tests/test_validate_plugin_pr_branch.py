@@ -142,6 +142,77 @@ class BranchAwareValidationTests(unittest.TestCase):
             ["plugins/contributor/own-plugin"],
         )
 
+    def test_deleted_manifest_is_not_silently_skipped(self):
+        # Deleting only plugin.json must be treated as a changed bundle
+        # and reach the existing missing-manifest failure.
+        with tempfile.TemporaryDirectory() as scratch:
+            repo = Path(scratch) / "repo"
+            repo.mkdir()
+
+            def git(*args):
+                return subprocess.run(
+                    ["git", "-C", str(repo), *args],
+                    check=True, capture_output=True, text=True,
+                ).stdout.strip()
+
+            git("init", "-b", "main")
+            git("config", "user.name", "Plugin validation test")
+            git("config", "user.email", "validation-test@example.invalid")
+            bundle = repo / "plugins" / "contributor" / "bundle"
+            manifest = bundle / ".codex-plugin" / "plugin.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text('{"name":"bundle"}', encoding="utf-8")
+            git("add", "plugins")
+            git("commit", "-m", "original bundle")
+            git("switch", "-c", "remove-manifest")
+            manifest.unlink()
+            git("add", "-u")
+            git("commit", "-m", "remove manifest")
+
+            with patch.object(MODULE, "REPO_ROOT", repo), patch.object(
+                MODULE, "PLUGINS_DIR", repo / "plugins"
+            ):
+                changed = MODULE.get_changed_plugin_dirs("main")
+                errors, _ = MODULE.validate_local_bundle(bundle)
+
+        self.assertEqual(changed, [bundle])
+        self.assertTrue(any("Missing .codex-plugin/plugin.json" in e for e in errors))
+
+    def test_deleted_entire_bundle_cannot_escape_validation(self):
+        # An external PR must not evade validation by removing its
+        # complete committed bundle instead of just the manifest.
+        with tempfile.TemporaryDirectory() as scratch:
+            repo = Path(scratch) / "repo"
+            repo.mkdir()
+
+            def git(*args):
+                return subprocess.run(
+                    ["git", "-C", str(repo), *args],
+                    check=True, capture_output=True, text=True,
+                ).stdout.strip()
+
+            git("init", "-b", "main")
+            git("config", "user.name", "Plugin validation test")
+            git("config", "user.email", "validation-test@example.invalid")
+            bundle = repo / "plugins" / "contributor" / "bundle"
+            manifest = bundle / ".codex-plugin" / "plugin.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text('{"name":"bundle"}', encoding="utf-8")
+            git("add", "plugins")
+            git("commit", "-m", "original bundle")
+            git("switch", "-c", "remove-bundle")
+            git("rm", "-r", "plugins/contributor/bundle")
+            git("commit", "-m", "remove bundle")
+
+            with patch.object(MODULE, "REPO_ROOT", repo), patch.object(
+                MODULE, "PLUGINS_DIR", repo / "plugins"
+            ):
+                changed = MODULE.get_changed_plugin_dirs("main")
+                errors, _ = MODULE.validate_local_bundle(bundle)
+
+        self.assertEqual(changed, [bundle])
+        self.assertTrue(any("Plugin directory does not exist" in e for e in errors))
+
     def test_new_readme_entry_preserves_source_ref_for_validation(self):
         entry_line = (
             "- [WTFM](https://github.com/SupportPages-io/wtfm/tree/codex-plugin) "
