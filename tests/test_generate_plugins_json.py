@@ -550,6 +550,51 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
         data.seek(0)
         return zipfile.ZipFile(data)
 
+    def test_ten_redfox_bundles_remain_independently_installable(self):
+        # Mirror every distinct, verified Redfox source manifest without
+        # replacing an earlier bundle or pointing two entries at one path.
+        import io
+        import json
+        import zipfile
+
+        names = ["account-video-downloader","image-gen","instagram-video-downloader","overseas-trending-search","pdf-image-text-extractor","seedance-video-gen","tiktok-video-downloader","twitter-video-downloader","youtube-digest","youtube-video-downloader"]
+        payload = io.BytesIO()
+        with zipfile.ZipFile(payload, "w") as writer:
+            for name in names:
+                prefix = f"redfox-main/plugins/{name}"
+                writer.writestr(
+                    f"{prefix}/.codex-plugin/plugin.json",
+                    json.dumps({"name": name, "skills": "./skills", "interface": {}}),
+                )
+                writer.writestr(f"{prefix}/skills/SKILL.md", f"# {name}\n")
+        payload.seek(0)
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            paths = set()
+            with (
+                zipfile.ZipFile(payload) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                for name in names:
+                    manifest, marketplace_path, relative = MODULE.mirror_plugin_bundle({
+                        "name": name,
+                        "owner": "redfox-data",
+                        "repo": "redfox-agent-plugins",
+                        "_mirror_subpath": "true",
+                    })
+                    self.assertEqual(manifest["name"], name)
+                    self.assertEqual(relative, f"plugins/{name}")
+                    paths.add(marketplace_path)
+            self.assertEqual(len(paths), 10)
+            for name in names:
+                bundle = root / "redfox-data/redfox-agent-plugins/plugins" / name
+                self.assertTrue((bundle / ".codex-plugin/plugin.json").is_file())
+                self.assertEqual(
+                    (bundle / "skills/SKILL.md").read_text(encoding="utf-8"),
+                    f"# {name}\n",
+                )
+
     def test_named_bundle_without_canonical_manifest_name_is_not_published(self):
         import json
 
