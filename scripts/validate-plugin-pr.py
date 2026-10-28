@@ -141,7 +141,9 @@ def find_plugin_root(
         root = PurePosixPath(name).parent.parent
         try:
             manifest = json.loads(archive.read(name).decode("utf-8"))
-        except (ValueError, UnicodeError, KeyError):
+        except (ValueError, UnicodeError, KeyError, zipfile.BadZipFile, EOFError):
+            # A corrupt or truncated *different* member must not crash
+            # selection of the independently named plugin.
             continue
         if not isinstance(manifest, dict):
             continue
