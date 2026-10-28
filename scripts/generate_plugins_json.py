@@ -229,6 +229,7 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
         return roots[0]
 
     expected = normalize_match_key(plugin["name"])
+    matching_roots: list[PurePosixPath] = []
     for root in roots:
         manifest = load_manifest(archive, root)
         interface = manifest.get("interface", {})
@@ -240,8 +241,15 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
         if isinstance(interface, dict):
             candidates.extend([interface.get("displayName"), interface.get("shortDescription")])
         if any(normalize_match_key(candidate) == expected for candidate in candidates):
-            return root
+            matching_roots.append(root)
 
+    if len(matching_roots) == 1:
+        return matching_roots[0]
+    if plugin.get("_mirror_subpath") == "true":
+        # Distinct README entries sharing one repo must never silently mirror
+        # the first unrelated manifest (or an ambiguous duplicate name).
+        raise ValueError(f"No uniquely matching nested manifest for {plugin['name']!r}")
+    # Preserve legacy one-entry umbrella listings until individually converted.
     return roots[0]
 
 
