@@ -471,6 +471,25 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     return mirrored_manifest, marketplace_path, plugin_root_relative
 
 
+
+def verified_mirrored_icon_path(
+    icon_reference: str, local_root: Path, marketplace_path: str
+) -> str | None:
+    """Use only a regular icon file beneath the actual mirrored bundle."""
+    if icon_reference.startswith("[") and (
+        "TODO" in icon_reference or "PLACEHOLDER" in icon_reference
+    ):
+        return None
+    rel = normalize_relative_path(icon_reference)
+    if not rel:
+        return None
+    root = local_root.resolve()
+    candidate = (root / rel).resolve()
+    if not candidate.is_relative_to(root) or not candidate.is_file():
+        return None
+    return f"{marketplace_path}/{rel}"
+
+
 def build_marketplace_entry(
     plugin: dict[str, str],
     manifest: dict[str, object],
@@ -563,29 +582,20 @@ def main() -> None:
             continue
         plugin["install_url"] = build_raw_manifest_url(plugin, plugin_root_relative)
 
-        # Determine icon path if available and actually mirrored
+        # Source manifest paths must never escape the actual mirrored bundle.
+        # Merely checking a constructed path's existence could publish a
+        # traversal reference to an unrelated local file or directory.
         icon_path: str | None = None
         interface = manifest.get("interface", {})
         if isinstance(interface, dict):
             composer_icon = interface.get("composerIcon") or interface.get("logo")
             if isinstance(composer_icon, str) and composer_icon.strip():
-                # Thread 1 fix: reject placeholder values like "[TODO: ./assets/icon.png]"
-                stripped = composer_icon.strip()
-                if not (stripped.startswith('[') and ('TODO' in stripped or 'PLACEHOLDER' in stripped)):
-                    # Properly strip leading "./" or "/" only, preserving dot-prefixed filenames like ".mcp.json"
-                    rel = composer_icon
-                    if rel.startswith('./'):
-                        rel = rel[2:]
-                    elif rel.startswith('/'):
-                        rel = rel[1:]
-                    candidate = f"{marketplace_path}/{rel}"
-                    # Verify the file exists in the mirrored plugin directory
-                    local_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
-                    if plugin.get("_mirror_subpath") == "true" and plugin_root_relative:
-                        local_root = local_root / PurePosixPath(plugin_root_relative)
-                    abs_path = local_root / rel
-                    if abs_path.exists():
-                        icon_path = candidate
+                local_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
+                if plugin.get("_mirror_subpath") == "true" and plugin_root_relative:
+                    local_root = local_root / PurePosixPath(plugin_root_relative)
+                icon_path = verified_mirrored_icon_path(
+                    composer_icon, local_root, marketplace_path
+                )
 
         mirrored_entries.append(build_marketplace_entry(plugin, manifest, marketplace_path, icon_path))
 
