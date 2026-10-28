@@ -221,6 +221,29 @@ class MalformedManifestTests(unittest.TestCase):
         self.assertIn("Could not read valid plugin.json from source repo", errors)
         self.assertEqual(warnings, [])
 
+    def test_corrupt_remote_manifest_member_is_unreadable(self) -> None:
+        for failure in (
+            zipfile.BadZipFile("manifest CRC mismatch"),
+            EOFError("truncated manifest member"),
+        ):
+            with self.subTest(failure=type(failure).__name__):
+                raw = io.BytesIO()
+                with zipfile.ZipFile(raw, "w") as output:
+                    output.writestr(
+                        "demo-main/.codex-plugin/plugin.json",
+                        json.dumps(self.valid_fields({
+                            "displayName": "Demo",
+                            "shortDescription": "Demo",
+                            "composerIcon": "",
+                        })),
+                    )
+                with zipfile.ZipFile(io.BytesIO(raw.getvalue())) as archive:
+                    with patch.object(VALIDATOR, "fetch_repo_archive", return_value=archive):
+                        with patch.object(archive, "read", side_effect=failure):
+                            errors, warnings = VALIDATOR.validate_remote_repo("maker", "demo")
+                self.assertIn("Could not read valid plugin.json from source repo", errors)
+                self.assertEqual(warnings, [])
+
     def test_non_utf8_remote_root_is_unreadable(self) -> None:
         raw = io.BytesIO()
         with zipfile.ZipFile(raw, "w") as out:
