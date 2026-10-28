@@ -421,6 +421,23 @@ def sanitize_metadata_only_manifest(manifest: dict[str, object], plugin: dict[st
     return sanitized
 
 
+def require_safe_mirror_destination(root: Path, destination: Path) -> None:
+    """Refuse output traversal and symlinked ancestors before any deletion."""
+    if root.is_symlink():
+        raise ValueError("Generated plugins root must not be a symlink")
+    try:
+        parts = destination.relative_to(root).parts
+    except ValueError as exc:
+        raise ValueError("Mirror destination is outside generated plugins root") from exc
+    current = root
+    for part in parts:
+        if part in {".", ".."}:
+            raise ValueError("Mirrored bundle path contains traversal")
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(f"Mirrored bundle path must not follow a symlink: {current}")
+
+
 def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str, str]:
     owner_repo = f"{plugin['owner']}/{plugin['repo']}"
     try:
@@ -459,6 +476,9 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     destination_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
     if use_subpath and plugin_root_relative:
         destination_root = destination_root / PurePosixPath(plugin_root_relative)
+    # Do not delete or overwrite files through a repository-controlled path
+    # that resolves to another directory (including an existing symlink).
+    require_safe_mirror_destination(PLUGINS_ROOT, destination_root)
     # Clear destination to avoid stale files from previous runs (Thread 2 fix)
     if destination_root.exists():
         shutil.rmtree(destination_root)
