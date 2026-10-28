@@ -301,5 +301,54 @@ class MultiPluginManifestTests(unittest.TestCase):
             any("uniquely matching manifest" in error for error in errors), errors
         )
 
+
+class ExistingMirrorSourceValidationTests(unittest.TestCase):
+    def test_second_named_plugin_is_not_skipped_by_existing_umbrella_mirror(self) -> None:
+        import contextlib
+        import io as output_io
+        import tempfile
+
+        repo_url = "https://github.com/example/multi-plugin"
+        entry = {
+            "display_name": "Beta",
+            "url": repo_url,
+            "owner": "example",
+            "repo": "multi-plugin",
+            "description": "Second separately named plugin.",
+            "source_ref": None,
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            plugin_root = Path(folder) / "example" / "multi-plugin"
+            manifest_path = plugin_root / ".codex-plugin" / "plugin.json"
+            manifest_path.parent.mkdir(parents=True)
+            manifest_path.write_text('{"name": "alpha"}', encoding="utf-8")
+            for names, expected_calls in (
+                ({"Alpha", "Beta"}, 1),
+                ({"Beta"}, 0),
+            ):
+                with self.subTest(names=sorted(names)):
+                    keys = {(repo_url, name) for name in names}
+                    with (
+                        patch.object(VALIDATOR, "git", return_value="valid-base"),
+                        patch.object(VALIDATOR, "get_changed_plugin_dirs", return_value=[]),
+                        patch.object(VALIDATOR, "get_new_readme_entries", return_value=[entry]),
+                        patch.object(VALIDATOR, "community_plugin_keys", return_value=keys),
+                        patch.object(VALIDATOR, "PLUGINS_DIR", Path(folder)),
+                        patch.object(Path, "read_text", return_value="## Community Plugins"),
+                        patch.object(VALIDATOR, "validate_remote_repo", return_value=([], [])) as validate,
+                        patch.object(sys, "argv", ["validate-plugin-pr.py", "--base-ref", "origin/main"]),
+                        contextlib.redirect_stdout(output_io.StringIO()),
+                    ):
+                        with self.assertRaises(SystemExit) as finished:
+                            VALIDATOR.main()
+                    self.assertEqual(finished.exception.code, 0)
+                    self.assertEqual(validate.call_count, expected_calls)
+                    if expected_calls:
+                        validate.assert_called_once_with(
+                            "example", "multi-plugin", None, "Beta",
+                            require_named_match=True,
+                        )
+
+
 if __name__ == "__main__":
     unittest.main()
