@@ -71,6 +71,8 @@ def require_real_mirror_parents(root: Path, destination: Path) -> None:
         raise ValueError("Mirror destination is outside generated plugins root") from exc
     current = root
     for part in parts:
+        if part in {".", ".."}:
+            raise ValueError("Mirrored bundle path contains traversal")
         current = current / part
         if current.is_symlink():
             raise ValueError(f"Mirrored bundle path must not follow a symlink: {current}")
