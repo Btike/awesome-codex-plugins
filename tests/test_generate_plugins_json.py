@@ -46,6 +46,36 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 sentinel.read_text(encoding="utf-8"), "outside must survive"
             )
 
+    def test_malformed_manifest_interface_preserves_previous_mirror(self):
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            destination = root / "maker" / "demo"
+            destination.mkdir(parents=True)
+            sentinel = destination / "existing.txt"
+            sentinel.write_text("valid prior install", encoding="utf-8")
+            data = io.BytesIO()
+            with zipfile.ZipFile(data, "w") as creator:
+                creator.writestr(
+                    "demo-main/.codex-plugin/plugin.json",
+                    '{"name":"demo","interface":[]}',
+                )
+            data.seek(0)
+            with (
+                zipfile.ZipFile(data) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(ValueError, "object root and interface"):
+                    MODULE.mirror_plugin_bundle({
+                        "name": "demo", "owner": "maker", "repo": "demo",
+                    })
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "valid prior install"
+            )
+
     def test_mirror_rejects_selected_zip_symlink_before_replacement(self):
         import io
         import zipfile
