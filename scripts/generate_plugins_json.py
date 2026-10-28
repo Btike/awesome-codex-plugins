@@ -282,7 +282,9 @@ def add_recursive_selection(
     relative_path: str,
 ) -> None:
     normalized = normalize_relative_path(relative_path)
-    if not normalized:
+    # A "." source path points at the whole repository. A plugin must not
+    # mirror undeclared source files simply because its manifest names ".".
+    if not normalized or PurePosixPath(normalized) == PurePosixPath("."):
         return
     archive_prefix = plugin_root.joinpath(PurePosixPath(normalized)).as_posix()
     if archive_prefix in all_names:
