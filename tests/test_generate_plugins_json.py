@@ -418,5 +418,51 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                 )
 
 
+
+class UntrustedArchivePathTests(unittest.TestCase):
+    def test_manifest_paths_reject_escape_and_absolute_locations(self):
+        for unsafe in (
+            "../secrets.json",
+            "skills/../../secrets.json",
+            "/tmp/external",
+            r"..\\outside",
+            "./skills/../../../outside",
+            "skills/evil\\..\\..\\outside",
+            "skills/\\x00bad",
+        ):
+            with self.subTest(path=repr(unsafe)):
+                self.assertEqual(MODULE.normalize_relative_path(unsafe), "")
+        self.assertEqual(
+            MODULE.normalize_relative_path("./skills/hooks"), "skills/hooks"
+        )
+        self.assertEqual(
+            MODULE.normalize_relative_path(".mcp.json"), ".mcp.json"
+        )
+
+    def test_untrusted_zip_member_never_selects_parent_write(self):
+        from pathlib import PurePosixPath
+
+        root = PurePosixPath("demo-main/plugins/alpha")
+        members = {
+            "demo-main/plugins/alpha/skills/hook.py",
+            "demo-main/plugins/alpha/skills/../../private.txt",
+            "demo-main/plugins/alpha/skills/sub/../../../other.txt",
+        }
+        selected = set()
+        MODULE.add_recursive_selection(selected, members, root, "skills")
+        self.assertEqual(selected, {"skills/hook.py"})
+
+    def test_archive_manifest_root_cannot_contain_parent_components(self):
+        names = {
+            "demo-main/plugins/alpha/.codex-plugin/plugin.json",
+            "demo-main/plugins/../outside/.codex-plugin/plugin.json",
+            "/tmp/rogue/.codex-plugin/plugin.json",
+        }
+        self.assertEqual(
+            [p.as_posix() for p in MODULE.find_plugin_roots(names)],
+            ["demo-main/plugins/alpha"],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
