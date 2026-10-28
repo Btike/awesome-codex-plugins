@@ -428,7 +428,7 @@ class UntrustedArchivePathTests(unittest.TestCase):
             r"..\\outside",
             "./skills/../../../outside",
             "skills/evil\\..\\..\\outside",
-            "skills/\\x00bad",
+            "skills/\x00bad",
         ):
             with self.subTest(path=repr(unsafe)):
                 self.assertEqual(MODULE.normalize_relative_path(unsafe), "")
