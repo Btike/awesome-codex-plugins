@@ -310,7 +310,15 @@ def validate_remote_repo(
         else:
             icon_archive_path = plugin_root.joinpath(PurePosixPath(icon_rel)).as_posix()
             try:
-                errors.extend(validate_icon_bytes(icon_rel, archive.read(icon_archive_path)))
+                # A source archive can compress an oversized image to very few
+                # bytes. Reject it by ZIP metadata before expanding the member.
+                icon_info = archive.getinfo(icon_archive_path)
+                if icon_info.file_size > MAX_ICON_SIZE_BYTES:
+                    errors.append(
+                        f"Icon is {icon_info.file_size / 1024:.1f}KB, exceeds 50KB limit."
+                    )
+                else:
+                    errors.extend(validate_icon_bytes(icon_rel, archive.read(icon_archive_path)))
             except KeyError:
                 errors.append(
                     f"Icon file not found in source repo at: {icon_rel} "
