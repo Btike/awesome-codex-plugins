@@ -100,6 +100,17 @@ class ReadmeEntryRegexTests(unittest.TestCase):
 
         self.assertEqual(len(entries), 1)
 
+    def test_ui_query_or_fragment_cannot_duplicate_same_source_and_name(self) -> None:
+        base_entry = "- [Shared](https://github.com/Example/Plugin?tab=readme) - Old."
+        new_entry = "- [Shared](https://github.com/example/plugin#readme) - New."
+        old_readme = "## Community Plugins\n" + base_entry
+        new_readme = "## Community Plugins\n" + new_entry
+        diff = "\n".join((
+            "diff --git a/README.md b/README.md",
+            "-" + base_entry, "+" + new_entry,
+        ))
+        self.assertEqual(self.parse_new_entries(diff, old_readme, new_readme), [])
+
     def test_tree_ref_and_subpath_case_are_preserved(self) -> None:
         base_readme = (
             "## Community Plugins\n"
