@@ -618,6 +618,32 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
         data.seek(0)
         return zipfile.ZipFile(data)
 
+    def test_excessively_nested_unrelated_manifest_does_not_block_named_bundle(self):
+        # Python's JSON decoder raises RecursionError on deeply nested input.
+        # A broken sibling must not prevent another source-owned plugin from
+        # passing the unique canonical-name check.
+        import io
+        import zipfile
+
+        payload = io.BytesIO()
+        with zipfile.ZipFile(payload, "w") as writer:
+            writer.writestr(
+                "demo-main/plugins/bad/.codex-plugin/plugin.json",
+                ("[" * 1200 + "0" + "]" * 1200).encode("utf-8"),
+            )
+            writer.writestr(
+                "demo-main/plugins/good/.codex-plugin/plugin.json",
+                '{"name":"good","interface":{}}',
+            )
+        payload.seek(0)
+        with zipfile.ZipFile(payload) as archive:
+            selected = MODULE.resolve_plugin_root(
+                archive,
+                set(archive.namelist()),
+                {"name": "good", "_mirror_subpath": "true"},
+            )
+        self.assertEqual(selected.as_posix(), "demo-main/plugins/good")
+
     def test_ten_redfox_bundles_remain_independently_installable(self):
         # Mirror every distinct, verified Redfox source manifest without
         # replacing an earlier bundle or pointing two entries at one path.
