@@ -59,3 +59,18 @@ def verify_archive_members(
         with archive.open(archive_name) as member:
             while member.read(1024 * 1024):
                 pass
+
+
+def require_real_mirror_parents(root: Path, destination: Path) -> None:
+    """Do not replace a mirrored bundle through a symlinked output directory."""
+    if root.is_symlink():
+        raise ValueError("Generated plugins root must not be a symlink")
+    try:
+        parts = destination.relative_to(root).parts
+    except ValueError as exc:
+        raise ValueError("Mirror destination is outside generated plugins root") from exc
+    current = root
+    for part in parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(f"Mirrored bundle path must not follow a symlink: {current}")
