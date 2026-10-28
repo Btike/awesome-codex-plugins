@@ -196,6 +196,14 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not manifest_path.exists():
         errors.append(f"Missing .codex-plugin/plugin.json in {rel_path}")
         return errors, warnings
+    # Treat directory-shaped and escaping symlink manifests as contributor
+    # errors instead of reading outside the bundle or raising a traceback.
+    if (
+        not manifest_path.is_file()
+        or not manifest_path.resolve().is_relative_to(plugin_dir.resolve())
+    ):
+        errors.append(f"plugin.json must be a regular file within {rel_path}")
+        return errors, warnings
 
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
