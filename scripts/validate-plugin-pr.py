@@ -316,6 +316,10 @@ def validate_remote_repo(
                     f"Icon file not found in source repo at: {icon_rel} "
                     f"(referenced by composerIcon in plugin.json)"
                 )
+            except (zipfile.BadZipFile, EOFError) as exc:
+                # A broken ZIP member should yield an actionable contributor
+                # diagnostic instead of aborting validation with a traceback.
+                errors.append(f"Could not read source icon {icon_rel}: corrupt archive member ({type(exc).__name__})")
 
     return errors, warnings
 
