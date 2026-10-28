@@ -284,6 +284,28 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                 "demo-main/plugins/alpha",
             )
 
+    def test_single_nested_manifest_must_match_each_shared_repo_listing(self):
+        with self.archive_for([("alpha", "alpha")]) as archive:
+            names = set(archive.namelist())
+            self.assertEqual(
+                MODULE.resolve_plugin_root(
+                    archive, names,
+                    {"name": "alpha", "_mirror_subpath": "true"},
+                ).as_posix(),
+                "demo-main/plugins/alpha",
+            )
+            with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, names,
+                    {"name": "unrelated", "_mirror_subpath": "true"},
+                )
+            self.assertEqual(
+                MODULE.resolve_plugin_root(
+                    archive, names, {"name": "legacy umbrella"},
+                ).as_posix(),
+                "demo-main/plugins/alpha",
+            )
+
     def test_ambiguous_shared_repo_manifest_name_fails_closed(self):
         with self.archive_for([("alpha", "shared"), ("beta", "shared")]) as archive:
             with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
