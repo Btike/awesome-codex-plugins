@@ -265,6 +265,39 @@ class MalformedManifestTests(unittest.TestCase):
         self.assertTrue(any("plugin.json is not valid JSON" in error for error in errors))
         self.assertEqual(warnings, [])
 
+    def test_directory_shaped_local_manifest_is_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "demo"
+            (bundle / ".codex-plugin" / "plugin.json").mkdir(parents=True)
+            with patch.object(VALIDATOR, "REPO_ROOT", root):
+                errors, warnings = VALIDATOR.validate_local_bundle(bundle)
+        self.assertTrue(any("plugin.json must be a regular file" in e for e in errors))
+        self.assertEqual(warnings, [])
+
+    def test_escaping_local_manifest_symlink_is_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "demo"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            outside = root / "outside.json"
+            outside.write_text(
+                json.dumps(self.valid_fields({
+                    "displayName": "Demo",
+                    "shortDescription": "Demo",
+                    "composerIcon": "",
+                })),
+                encoding="utf-8",
+            )
+            try:
+                (bundle / ".codex-plugin" / "plugin.json").symlink_to(outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"Symlinks unavailable: {exc}")
+            with patch.object(VALIDATOR, "REPO_ROOT", root):
+                errors, warnings = VALIDATOR.validate_local_bundle(bundle)
+        self.assertTrue(any("plugin.json must be a regular file" in e for e in errors))
+        self.assertEqual(warnings, [])
+
     def test_non_string_required_fields_rejected_in_remote_submission(self) -> None:
         valid_interface = {
             "displayName": "Demo",
