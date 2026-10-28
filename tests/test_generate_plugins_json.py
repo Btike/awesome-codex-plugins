@@ -76,6 +76,42 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 sentinel.read_text(encoding="utf-8"), "valid prior install"
             )
 
+    def test_duplicate_selected_zip_member_preserves_previous_bundle(self):
+        import io
+        import warnings
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            bundle = root / "maker" / "demo"
+            bundle.mkdir(parents=True)
+            sentinel = bundle / "existing.txt"
+            sentinel.write_text("previous working install", encoding="utf-8")
+            content = io.BytesIO()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                with zipfile.ZipFile(content, "w") as writer:
+                    writer.writestr(
+                        "demo-main/.codex-plugin/plugin.json",
+                        '{"name":"demo","scripts":"./scripts","interface":{}}',
+                    )
+                    writer.writestr("demo-main/scripts/launcher.py", "safe")
+                    writer.writestr("demo-main/scripts/launcher.py", "other payload")
+            content.seek(0)
+            with (
+                zipfile.ZipFile(content) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(ValueError, "Duplicate selected ZIP member"):
+                    MODULE.mirror_plugin_bundle({
+                        "name": "demo", "owner": "maker", "repo": "demo",
+                    })
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "previous working install"
+            )
+            self.assertFalse((bundle / "scripts").exists())
+
     def test_mirror_rejects_selected_zip_symlink_before_replacement(self):
         import io
         import zipfile
