@@ -388,6 +388,17 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                 "demo-main/plugins/alpha",
             )
 
+    def test_non_ascii_only_labels_cannot_share_one_manifest_identity(self):
+        # Both distinct source names normalize to the empty ASCII key.
+        # Empty matches cannot authorize new mirrored bundle identities.
+        with self.archive_for([("alpha", "🚀")]) as archive:
+            names = set(archive.namelist())
+            with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, names,
+                    {"name": "🔒", "_mirror_subpath": "true"},
+                )
+
     def test_ambiguous_shared_repo_manifest_name_fails_closed(self):
         with self.archive_for([("alpha", "shared"), ("beta", "shared")]) as archive:
             with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
