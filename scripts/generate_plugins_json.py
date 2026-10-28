@@ -181,11 +181,11 @@ def parse_plugins(readme_path: Path) -> list[dict[str, str]]:
 
     repo_counts: dict[str, int] = {}
     for plugin in plugins:
-        owner_repo = f"{plugin['owner']}/{plugin['repo']}"
+        owner_repo = f"{plugin['owner']}/{plugin['repo']}".casefold()
         repo_counts[owner_repo] = repo_counts.get(owner_repo, 0) + 1
 
     for plugin in plugins:
-        owner_repo = f"{plugin['owner']}/{plugin['repo']}"
+        owner_repo = f"{plugin['owner']}/{plugin['repo']}".casefold()
         if repo_counts[owner_repo] > 1:
             plugin["_mirror_subpath"] = "true"
 
