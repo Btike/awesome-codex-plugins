@@ -12,6 +12,26 @@ SPEC.loader.exec_module(MODULE)
 
 
 class GeneratedBundleCleanupTests(unittest.TestCase):
+    def test_equivalent_readme_aliases_share_one_bundle_identity(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            readme = Path(scratch) / "README.md"
+            readme.write_text(
+                "## Community Plugins\\n"
+                "- [image-gen](https://github.com/redfox-data/redfox-agent-plugins) "
+                "- First display label.\\n"
+                "- [Image Gen](https://github.com/REDFOX-DATA/redfox-agent-plugins) "
+                "- Same upstream bundle with alternate casing and spacing.\\n"
+                "- [transcript-extractor](https://github.com/redfox-data/redfox-agent-plugins) "
+                "- Independently named source plugin.\\n",
+                encoding="utf-8",
+            )
+            entries = MODULE.parse_plugins(readme)
+
+        self.assertEqual([entry["name"] for entry in entries], [
+            "image-gen", "transcript-extractor",
+        ])
+        self.assertTrue(all(entry.get("_mirror_subpath") == "true" for entry in entries))
+
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
