@@ -333,6 +333,23 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
             )
             self.assertEqual(selected.as_posix(), "demo-main/plugins/strasse")
 
+    def test_nonlatin_manifest_name_resolves_without_alias_fallback(self):
+        # Chinese and accented Latin source identities must not normalize to
+        # an empty ASCII-only key or select an unrelated nested bundle.
+        with self.archive_for([
+            ("video", "视频下载"), ("eclair", "Éclair"), ("other", "other"),
+        ]) as archive:
+            names = set(archive.namelist())
+            for display, directory in (("视频下载", "video"), ("éCLAIR", "eclair")):
+                with self.subTest(display=display):
+                    selected = MODULE.resolve_plugin_root(
+                        archive, names,
+                        {"name": display, "_mirror_subpath": "true"},
+                    )
+                    self.assertEqual(
+                        selected.as_posix(), f"demo-main/plugins/{directory}",
+                    )
+
     def test_unrelated_corrupt_manifest_does_not_block_named_bundle(self):
         import zipfile
 
