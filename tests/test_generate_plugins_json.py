@@ -350,6 +350,34 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                         selected.as_posix(), f"demo-main/plugins/{directory}",
                     )
 
+    def test_archive_traversal_name_cannot_resolve_as_nested_plugin(self):
+        # A crafted ZIP member must not become a candidate manifest even if
+        # its declared name matches the README. Never select a path with '..'.
+        import io
+        import json
+        import zipfile
+        payload = io.BytesIO()
+        with zipfile.ZipFile(payload, "w") as output:
+            output.writestr(
+                "demo-main/../outside/.codex-plugin/plugin.json",
+                json.dumps({"name": "outside"}),
+            )
+            output.writestr(
+                "demo-main/plugins/safe/.codex-plugin/plugin.json",
+                json.dumps({"name": "safe"}),
+            )
+        payload.seek(0)
+        with zipfile.ZipFile(payload) as archive:
+            names = set(archive.namelist())
+            roots = MODULE.find_plugin_roots(names)
+            self.assertEqual([root.as_posix() for root in roots], [
+                "demo-main/plugins/safe",
+            ])
+            with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, names, {"name": "outside", "_mirror_subpath": "true"},
+                )
+
     def test_unrelated_corrupt_manifest_does_not_block_named_bundle(self):
         import zipfile
 
