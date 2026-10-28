@@ -244,6 +244,19 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
             ".codex-plugin/plugin.json",
         )
 
+    def test_nested_manifest_url_escapes_source_directory(self):
+        # A valid nested bundle directory may contain spaces, #, percent signs
+        # or non-ASCII characters. Raw GitHub URLs must quote those bytes or
+        # the installer receives the wrong manifest path.
+        self.assertEqual(
+            MODULE.build_raw_manifest_url(
+                {"owner": "example", "repo": "multi"},
+                "plugins/Loupe #1 /café%20review",
+            ),
+            "https://raw.githubusercontent.com/example/multi/HEAD/"
+            "plugins/Loupe%20%231%20/caf%C3%A9%2520review/.codex-plugin/plugin.json",
+        )
+
     def test_removes_retired_identity_and_preserves_canonical_bundle(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch) / "plugins"
