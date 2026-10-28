@@ -297,7 +297,7 @@ def validate_remote_repo(
 
 def get_changed_plugin_dirs(base_ref: str) -> list[Path]:
     """Find plugin directories that were added or modified in this branch."""
-    output = git("diff", "--merge-base", "--name-only", "--diff-filter=ACMR", base_ref, "HEAD", "--", "plugins/")
+    output = git("diff", "--merge-base", "--name-only", "--diff-filter=ACMRD", base_ref, "HEAD", "--", "plugins/")
     if not output:
         return []
 
@@ -310,6 +310,13 @@ def get_changed_plugin_dirs(base_ref: str) -> list[Path]:
             continue
 
         if len(relative.parts) < 3 or relative.parts[0] != "plugins":
+            continue
+
+        # A removed manifest must still reach local validation, even when
+        # the entire bundle has disappeared from the contributor branch.
+        # Otherwise a deletion is invisible to the existing ACMR-only diff.
+        if relative.parts[-2:] == (".codex-plugin", "plugin.json") and not file_path.is_file():
+            changed_dirs.add(file_path.parent.parent)
             continue
 
         current = file_path if file_path.is_dir() else file_path.parent
