@@ -32,6 +32,22 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
         ])
         self.assertTrue(all(entry.get("_mirror_subpath") == "true" for entry in entries))
 
+    def test_multi_bundle_repo_count_ignores_github_casing(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            readme = Path(scratch) / "README.md"
+            readme.write_text(
+                "## Community Plugins\n"
+                "- [image-gen](https://github.com/redfox-data/redfox-agent-plugins) "
+                "- Image generation.\n"
+                "- [transcript-extractor](https://github.com/REDFOX-DATA/REDFOX-AGENT-PLUGINS) "
+                "- Transcript extraction.\n",
+                encoding="utf-8",
+            )
+            entries = MODULE.parse_plugins(readme)
+
+        self.assertEqual(len(entries), 2)
+        self.assertTrue(all(entry.get("_mirror_subpath") == "true" for entry in entries))
+
     def test_branch_qualified_readme_entry_uses_source_branch_metadata(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
