@@ -125,6 +125,35 @@ class RemoteIconValidationTests(unittest.TestCase):
                 errors, _warnings = validator.validate_local_bundle(bundle)
         self.assertIn("composerIcon must stay within its plugin bundle", errors)
 
+    def test_local_icon_directory_reports_validation_error(self):
+        # A manifest may point to an existing directory named like an icon.
+        # It must not abort the validator with IsADirectoryError.
+        manifest = {
+            "name": "example",
+            "version": "1.0.0",
+            "description": "Example plugin",
+            "repository": "https://github.com/maker/example",
+            "license": "MIT",
+            "interface": {
+                "displayName": "Example",
+                "shortDescription": "Example plugin",
+                "composerIcon": "./assets/icon.png",
+            },
+        }
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            bundle = root / "plugins" / "maker" / "example"
+            (bundle / ".codex-plugin").mkdir(parents=True)
+            (bundle / "assets" / "icon.png").mkdir(parents=True)
+            (bundle / ".codex-plugin" / "plugin.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            with patch.object(validator, "REPO_ROOT", root):
+                errors, _warnings = validator.validate_local_bundle(bundle)
+        self.assertTrue(
+            any("not a regular file" in error for error in errors), errors
+        )
+
     def test_accepts_valid_small_png(self):
         # A real one-pixel PNG, not the literal ASCII sequence "\\x89PNG".
         png = base64.b64decode(
