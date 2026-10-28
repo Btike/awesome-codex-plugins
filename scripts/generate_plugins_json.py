@@ -264,8 +264,9 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
     for root in roots:
         try:
             manifest = load_manifest(archive, root)
-        except (ValueError, UnicodeError, KeyError, zipfile.BadZipFile, EOFError, zlib.error):
-            # A broken unrelated nested manifest must not prevent an otherwise
+        except (ValueError, UnicodeError, KeyError, zipfile.BadZipFile, EOFError, zlib.error, RecursionError):
+            # A malformed or excessively deep sibling manifest must not
+            # prevent selection of an independently valid named bundle.
             # uniquely verified plugin from being selected. A corrupt target
             # cannot match and remains blocked by the unique-name gate.
             continue
