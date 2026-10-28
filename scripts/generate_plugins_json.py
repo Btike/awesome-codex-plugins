@@ -232,6 +232,7 @@ def find_plugin_roots(names: set[str]) -> list[PurePosixPath]:
         for name in sorted(names)
         if name.endswith("/.codex-plugin/plugin.json")
         and normalize_relative_path(name) == name
+        and ".." not in PurePosixPath(name).parts
     ]
 
 
