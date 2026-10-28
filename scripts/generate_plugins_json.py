@@ -457,6 +457,12 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     except ValueError:
         raise ValueError(f"Archive for {owner_repo} does not contain a matching .codex-plugin/plugin.json") from None
     manifest = load_manifest(archive, plugin_root)
+    # A malformed source manifest must fail before the previous valid bundle
+    # is deleted. Later marketplace formatting assumes an object interface.
+    if not isinstance(manifest, dict) or not isinstance(
+        manifest.get("interface", {}), dict
+    ):
+        raise ValueError("Source plugin manifest must have an object root and interface")
     metadata_only = is_metadata_only_mirror(plugin)
     selected_paths = (
         collect_metadata_only_paths(manifest, names, plugin_root)
