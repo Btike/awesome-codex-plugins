@@ -127,15 +127,18 @@ def find_plugin_root(archive: zipfile.ZipFile) -> PurePosixPath | None:
     return PurePosixPath(names[0]).parent.parent
 
 
+_UNREADABLE_MANIFEST = object()
+
+
 def load_manifest_from_archive(
     archive: zipfile.ZipFile, plugin_root: PurePosixPath
-) -> dict | None:
-    """Load plugin.json from the archive at the given root."""
+) -> object:
+    """Return decoded JSON, or a distinct sentinel for missing/invalid JSON."""
     manifest_name = plugin_root.joinpath(".codex-plugin", "plugin.json").as_posix()
     try:
         return json.loads(archive.read(manifest_name).decode("utf-8"))
-    except (KeyError, json.JSONDecodeError):
-        return None
+    except (KeyError, UnicodeDecodeError, json.JSONDecodeError, zipfile.BadZipFile, EOFError):
+        return _UNREADABLE_MANIFEST
 
 
 # ---------------------------------------------------------------------------
@@ -143,14 +146,18 @@ def load_manifest_from_archive(
 # ---------------------------------------------------------------------------
 
 
-def validate_manifest_fields(manifest: dict) -> list[str]:
-    """Validate manifest fields. Works for both local and fetched manifests."""
+def validate_manifest_fields(manifest: object) -> list[str]:
+    """Validate manifest fields, including an invalid JSON root shape."""
     errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return ["plugin.json must contain a JSON object"]
 
     for field in REQUIRED_MANIFEST_FIELDS:
         val = manifest.get(field)
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Missing or empty required field: {field}")
+        elif not isinstance(val, str):
+            errors.append(f"Required field '{field}' must be a string")
 
     interface = manifest.get("interface")
     if not isinstance(interface, dict):
@@ -161,6 +168,8 @@ def validate_manifest_fields(manifest: dict) -> list[str]:
         val = interface.get(field)
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Missing or empty interface.{field}")
+        elif not isinstance(val, str):
+            errors.append(f"interface.{field} must be a string")
 
     version = manifest.get("version", "")
     if version and not re.match(r"^\d+\.\d+\.\d+", str(version)):
@@ -228,14 +237,26 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not manifest_path.exists():
         errors.append(f"Missing .codex-plugin/plugin.json in {rel_path}")
         return errors, warnings
+    # Treat directory-shaped and escaping symlink manifests as contributor
+    # errors instead of reading outside the bundle or raising a traceback.
+    if (
+        not manifest_path.is_file()
+        or not manifest_path.resolve().is_relative_to(plugin_dir.resolve())
+    ):
+        errors.append(f"plugin.json must be a regular file within {rel_path}")
+        return errors, warnings
 
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
         errors.append(f"plugin.json is not valid JSON: {e}")
         return errors, warnings
 
     errors.extend(validate_manifest_fields(manifest))
+    # The manifest-field validator has already recorded these errors. Do not
+    # attempt interface/icon lookup on malformed JSON object shapes.
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("interface"), dict):
+        return errors, warnings
 
     # Validate icon locally
     interface = manifest.get("interface", {})
@@ -294,11 +315,13 @@ def validate_remote_repo(
         return errors, warnings
 
     manifest = load_manifest_from_archive(archive, plugin_root)
-    if manifest is None:
+    if manifest is _UNREADABLE_MANIFEST:
         errors.append("Could not read valid plugin.json from source repo")
         return errors, warnings
 
     errors.extend(validate_manifest_fields(manifest))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("interface"), dict):
+        return errors, warnings
 
     # Check icon exists in the archive
     interface = manifest.get("interface", {})
@@ -339,7 +362,7 @@ def validate_remote_repo(
 
 def get_changed_plugin_dirs(base_ref: str) -> list[Path]:
     """Find plugin directories that were added or modified in this branch."""
-    output = git("diff", "--name-only", "--diff-filter=ACMR", base_ref, "--", "plugins/")
+    output = git("diff", "--merge-base", "--no-renames", "--name-only", "--diff-filter=ACMRD", base_ref, "HEAD", "--", "plugins/")
     if not output:
         return []
 
@@ -352,6 +375,13 @@ def get_changed_plugin_dirs(base_ref: str) -> list[Path]:
             continue
 
         if len(relative.parts) < 3 or relative.parts[0] != "plugins":
+            continue
+
+        # A removed manifest must still reach local validation, even when
+        # the entire bundle has disappeared from the contributor branch.
+        # --no-renames keeps a moved manifest visible as a deletion too.
+        if relative.parts[-2:] == (".codex-plugin", "plugin.json") and not file_path.is_file():
+            changed_dirs.add(file_path.parent.parent)
             continue
 
         current = file_path if file_path.is_dir() else file_path.parent
@@ -370,13 +400,20 @@ def get_new_readme_entries(base_ref: str) -> list[dict[str, str]]:
     Returns list of dicts with keys: display_name, url, owner, repo, description.
     """
     # Get the diff of README.md
-    diff = git("diff", base_ref, "--", "README.md")
+    diff = git("diff", "--merge-base", base_ref, "HEAD", "--", "README.md")
     if not diff:
         return []
 
     # Only the Community Plugins section contains Codex plugin listings.
     # Other sections such as Related Projects can link to non-plugin projects.
-    base_readme = git("show", f"{base_ref}:README.md")
+    # Diff and duplicate detection must compare against the SAME common ancestor.
+    # Reading the moving base-branch tip can hide a listing added on both branches.
+    merge_base = git("merge-base", base_ref, "HEAD")
+    if not merge_base:
+        raise RuntimeError(f"Cannot find merge base for README validation: {base_ref}")
+    base_readme = git("show", f"{merge_base}:README.md")
+    if not base_readme:
+        raise RuntimeError(f"Cannot read README at merge base {merge_base}")
     current_readme = README_PATH.read_text(encoding="utf-8") if README_PATH.exists() else ""
     base_urls = community_plugin_urls(base_readme)
     current_urls = community_plugin_urls(current_readme)
@@ -430,9 +467,14 @@ def main() -> None:
 
     rev_parse = git("rev-parse", "--verify", base_arg)
     if not rev_parse:
-        print(f"WARNING: Base ref '{base_arg}' not found, skipping validation")
-        print("  (This is normal for the first commit on a new branch without CI)")
-        sys.exit(0)
+        print(f"ERROR: Base ref '{base_arg}' not found; validation cannot run")
+        sys.exit(1)
+
+    # A PR may be behind main. Comparing both tips mislabels newer base
+    # changes as changes from the PR; compare only its own branch commits.
+    if not git("merge-base", base_arg, "HEAD"):
+        print(f"ERROR: No merge base between '{base_arg}' and HEAD")
+        sys.exit(1)
 
     has_failures = False
     total_errors = 0
