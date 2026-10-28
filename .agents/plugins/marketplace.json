@@ -20,22 +20,6 @@
       "icon": "./plugins/RBraga01/a-team/assets/icon.svg"
     },
     {
-      "name": "aw1-circuit-breaker",
-      "displayName": "AW-1 Circuit Breaker",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/MvikManners/aw1-circuit-breaker"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Security & Defense",
-      "description": "Application-layer AST and argument policy gate for agent tool calls that checks configured rules before Python execution; complements, but does not replace, operating-system sandbox isolation.",
-      "homepage": "https://p20.laveto.net/wisdom/",
-      "repository": "https://github.com/MvikManners/aw1-circuit-breaker"
-    },
-    {
       "name": "aegis",
       "displayName": "Aegis",
       "source": {
@@ -377,6 +361,21 @@
       "category": "Development & Workflow",
       "description": "Intake-first Codex plugin that turns a short project request into a structured, resumable execution workflow with one-question-at-a-time intake, project contract files, blocker triage, and resume support.",
       "icon": "./plugins/minsu0707/auto-pilot/assets/auto-pilot.png"
+    },
+    {
+      "name": "aw1-circuit-breaker",
+      "displayName": "AW-1 Circuit Breaker",
+      "source": {
+        "source": "local",
+        "path": "./plugins/MvikManners/aw1-circuit-breaker"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow",
+      "description": "Application-layer AST and argument policy gate for agent tool calls that checks configured rules before Python execution; complements, but does not replace, operating-system sandbox isolation.",
+      "icon": "./plugins/MvikManners/aw1-circuit-breaker/assets/icon.png"
     },
     {
       "name": "babok_analyst",
