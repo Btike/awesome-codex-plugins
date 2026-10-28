@@ -126,15 +126,18 @@ def find_plugin_root(archive: zipfile.ZipFile) -> PurePosixPath | None:
     return PurePosixPath(names[0]).parent.parent
 
 
+_UNREADABLE_MANIFEST = object()
+
+
 def load_manifest_from_archive(
     archive: zipfile.ZipFile, plugin_root: PurePosixPath
-) -> dict | None:
-    """Load plugin.json from the archive at the given root."""
+) -> object:
+    """Return decoded JSON, or a distinct sentinel for missing/invalid JSON."""
     manifest_name = plugin_root.joinpath(".codex-plugin", "plugin.json").as_posix()
     try:
         return json.loads(archive.read(manifest_name).decode("utf-8"))
-    except (KeyError, json.JSONDecodeError):
-        return None
+    except (KeyError, UnicodeDecodeError, json.JSONDecodeError, zipfile.BadZipFile, EOFError):
+        return _UNREADABLE_MANIFEST
 
 
 # ---------------------------------------------------------------------------
@@ -142,14 +145,18 @@ def load_manifest_from_archive(
 # ---------------------------------------------------------------------------
 
 
-def validate_manifest_fields(manifest: dict) -> list[str]:
-    """Validate manifest fields. Works for both local and fetched manifests."""
+def validate_manifest_fields(manifest: object) -> list[str]:
+    """Validate manifest fields, including an invalid JSON root shape."""
     errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return ["plugin.json must contain a JSON object"]
 
     for field in REQUIRED_MANIFEST_FIELDS:
         val = manifest.get(field)
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Missing or empty required field: {field}")
+        elif not isinstance(val, str):
+            errors.append(f"Required field '{field}' must be a string")
 
     interface = manifest.get("interface")
     if not isinstance(interface, dict):
@@ -160,6 +167,8 @@ def validate_manifest_fields(manifest: dict) -> list[str]:
         val = interface.get(field)
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Missing or empty interface.{field}")
+        elif not isinstance(val, str):
+            errors.append(f"interface.{field} must be a string")
 
     version = manifest.get("version", "")
     if version and not re.match(r"^\d+\.\d+\.\d+", str(version)):
@@ -187,14 +196,26 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not manifest_path.exists():
         errors.append(f"Missing .codex-plugin/plugin.json in {rel_path}")
         return errors, warnings
+    # Treat directory-shaped and escaping symlink manifests as contributor
+    # errors instead of reading outside the bundle or raising a traceback.
+    if (
+        not manifest_path.is_file()
+        or not manifest_path.resolve().is_relative_to(plugin_dir.resolve())
+    ):
+        errors.append(f"plugin.json must be a regular file within {rel_path}")
+        return errors, warnings
 
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
         errors.append(f"plugin.json is not valid JSON: {e}")
         return errors, warnings
 
     errors.extend(validate_manifest_fields(manifest))
+    # The manifest-field validator has already recorded these errors. Do not
+    # attempt interface/icon lookup on malformed JSON object shapes.
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("interface"), dict):
+        return errors, warnings
 
     # Validate icon locally
     interface = manifest.get("interface", {})
@@ -261,11 +282,13 @@ def validate_remote_repo(
         return errors, warnings
 
     manifest = load_manifest_from_archive(archive, plugin_root)
-    if manifest is None:
+    if manifest is _UNREADABLE_MANIFEST:
         errors.append("Could not read valid plugin.json from source repo")
         return errors, warnings
 
     errors.extend(validate_manifest_fields(manifest))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("interface"), dict):
+        return errors, warnings
 
     # Check icon exists in the archive
     interface = manifest.get("interface", {})
