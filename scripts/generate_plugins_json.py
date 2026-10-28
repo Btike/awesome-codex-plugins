@@ -499,6 +499,18 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
 
     # Duplicate entries can have order-dependent contents between ZIP readers.
     # Reject ambiguity in any selected member before replacing an installation.
+    # Case-distinct ZIP paths can overwrite on Windows/macOS even if their
+    # raw archive names differ. Reject before replacing a working bundle.
+    folded_paths: dict[str, str] = {}
+    for relative_path in sorted(selected_paths):
+        folded = relative_path.casefold()
+        previous = folded_paths.get(folded)
+        if previous is not None and previous != relative_path:
+            raise ValueError(
+                f"Case-insensitive selected archive path collision: {previous!r} / {relative_path!r}"
+            )
+        folded_paths[folded] = relative_path
+
     selected_archive_names = {
         plugin_root.joinpath(PurePosixPath(path)).as_posix()
         for path in selected_paths
