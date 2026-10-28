@@ -129,6 +129,29 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                     root, root / "maker:stream" / "repo"
                 )
 
+    def test_source_specific_runtime_paths_accept_repository_case_variants(self):
+        from pathlib import PurePosixPath
+
+        root = PurePosixPath("workflow-main")
+        names = {
+            "workflow-main/.codex-plugin/plugin.json",
+            "workflow-main/control-plane/launch.py",
+        }
+        selected = MODULE.collect_selected_paths(
+            {"name": "workflow"}, names, root,
+            {"owner": "TOHMAN233", "repo": "CODEX-AGENTS-WORKFLOW"},
+        )
+        self.assertIn("control-plane/launch.py", selected)
+
+    def test_metadata_only_mirror_policy_accepts_repository_case_variants(self):
+        plugin = {"owner": "MTURAC", "repo": "Everything-OpenAI-Codex"}
+        self.assertTrue(MODULE.is_metadata_only_mirror(plugin))
+        manifest = MODULE.sanitize_metadata_only_manifest(
+            {"name": "everything-openai-codex", "skills": "./skills"}, plugin
+        )
+        self.assertNotIn("skills", manifest)
+        self.assertEqual(manifest["author"]["name"], "Mehmet Turac")
+
     def test_equivalent_readme_aliases_share_one_bundle_identity(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
