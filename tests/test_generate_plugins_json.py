@@ -167,6 +167,39 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                     symlinked_root, symlinked_root / "GreenLv" / "codex-context-guard"
                 )
 
+    def test_context_guard_symlinked_destination_preserves_external_bundle(self):
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            owner = root / "GreenLv"
+            owner.mkdir(parents=True)
+            outside = Path(scratch) / "outside"
+            outside.mkdir()
+            sentinel = outside / "keep.txt"
+            sentinel.write_text("unchanged", encoding="utf-8")
+            (owner / "codex-context-guard").symlink_to(
+                outside, target_is_directory=True
+            )
+
+            source_bytes = io.BytesIO()
+            with zipfile.ZipFile(source_bytes, "w") as generated:
+                generated.writestr(
+                    "codex-context-guard-main/.codex-plugin/plugin.json",
+                    '{"name":"context-guard"}',
+                )
+            source_bytes.seek(0)
+            with zipfile.ZipFile(source_bytes) as archive, \\
+                    patch.object(MODULE, "fetch_repo_archive", return_value=archive), \\
+                    patch.object(MODULE, "PLUGINS_ROOT", root):
+                with self.assertRaisesRegex(ValueError, "symlink"):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "unchanged")
+
     def test_mirror_destination_rejects_parent_traversal(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch) / "plugins"
