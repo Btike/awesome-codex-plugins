@@ -55,6 +55,19 @@ def verify_archive_members(
     archive: zipfile.ZipFile, plugin_root: PurePosixPath, selected_paths: set[str]
 ) -> None:
     """Check selected ZIP payloads before replacing a published mirror."""
+    # Duplicate archive names are ambiguous: ZipFile.getinfo/read select the
+    # last occurrence, but a different ZIP consumer may install the first.
+    # Reject only selected members, before the existing bundle is removed.
+    selected_archive_names = {
+        plugin_root.joinpath(PurePosixPath(path)).as_posix()
+        for path in selected_paths
+    }
+    seen_selected: set[str] = set()
+    for info in archive.infolist():
+        if info.filename in selected_archive_names:
+            if info.filename in seen_selected:
+                raise ValueError(f"Duplicate selected ZIP member: {info.filename!r}")
+            seen_selected.add(info.filename)
     for relative_path in selected_paths:
         archive_name = plugin_root.joinpath(PurePosixPath(relative_path)).as_posix()
         info = archive.getinfo(archive_name)
