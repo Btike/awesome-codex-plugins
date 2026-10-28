@@ -433,7 +433,12 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     # Refuse unsafe ZIP members before clearing an existing published bundle.
     for relative_path in selected_paths:
         path = PurePosixPath(relative_path)
-        if path.is_absolute() or ".." in path.parts or "\\" in relative_path:
+        if (
+            path.is_absolute() or ".." in path.parts
+            or "\\" in relative_path or ":" in relative_path
+        ):
+            # A colon can identify an NTFS alternate data stream. Mirrored
+            # bundle files must be safe to install on Windows as well.
             raise ValueError(f"Unsafe mirrored archive path: {relative_path!r}")
     mirrored_manifest = sanitize_metadata_only_manifest(manifest, plugin) if metadata_only else manifest
 
