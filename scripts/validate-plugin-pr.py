@@ -120,7 +120,8 @@ def fetch_repo_archive(owner: str, repo: str, source_ref: str | None = None) -> 
 
 
 def find_plugin_root(
-    archive: zipfile.ZipFile, display_name: str | None = None
+    archive: zipfile.ZipFile, display_name: str | None = None,
+    require_named_match: bool = False,
 ) -> PurePosixPath | None:
     """Select a specific nested manifest when a README entry names one bundle."""
     names = sorted(
@@ -129,7 +130,7 @@ def find_plugin_root(
     )
     if not names:
         return None
-    if len(names) == 1:
+    if len(names) == 1 and not require_named_match:
         return PurePosixPath(names[0]).parent.parent
     if not display_name:
         # Preserve legacy behavior for callers without a README display name.
@@ -271,6 +272,7 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
 def validate_remote_repo(
     owner: str, repo: str, source_ref: str | None = None,
     display_name: str | None = None,
+    require_named_match: bool = False,
 ) -> tuple[list[str], list[str]]:
     """Fetch and validate a plugin from its source GitHub repo.
 
@@ -284,7 +286,7 @@ def validate_remote_repo(
     except Exception as e:
         return ([f"Failed to fetch source repo https://github.com/{owner}/{repo}: {e}"], [])
 
-    plugin_root = find_plugin_root(archive, display_name)
+    plugin_root = find_plugin_root(archive, display_name, require_named_match)
     if plugin_root is None:
         detail = (
             f"a uniquely matching manifest for '{display_name}'"
@@ -465,6 +467,14 @@ def main() -> None:
 
     if new_entries:
         print(f"\nValidating {len(new_entries)} new README entry(ies) against source repos...\n")
+        # A shared repository with multiple named catalog entries must not
+        # pass validation by silently selecting its only unrelated manifest.
+        source_counts: dict[str, int] = {}
+        for source_url, _name in community_plugin_keys(README_PATH.read_text(encoding="utf-8")):
+            parts = urlsplit(source_url).path.strip("/").split("/")
+            if len(parts) >= 2:
+                source_key = f"{parts[0].casefold()}/{parts[1].casefold()}"
+                source_counts[source_key] = source_counts.get(source_key, 0) + 1
         for entry in new_entries:
             owner, repo = entry["owner"], entry["repo"]
             label = f"{entry['display_name']} ({owner}/{repo})"
@@ -480,7 +490,11 @@ def main() -> None:
                 continue
 
             print(f"  Fetching {owner}/{repo}...")
-            errors, warnings = validate_remote_repo(owner, repo, entry.get("source_ref"), entry["display_name"])
+            source_key = f"{owner.casefold()}/{repo.casefold()}"
+            errors, warnings = validate_remote_repo(
+                owner, repo, entry.get("source_ref"), entry["display_name"],
+                require_named_match=source_counts.get(source_key, 0) > 1,
+            )
 
             if not errors:
                 print(f"  PASS: {label}")
