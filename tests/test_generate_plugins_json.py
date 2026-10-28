@@ -464,5 +464,51 @@ class UntrustedArchivePathTests(unittest.TestCase):
         )
 
 
+
+class MirroredIconContainmentTests(unittest.TestCase):
+    def test_good_nested_icon_survives_root_relative_path(self):
+        with tempfile.TemporaryDirectory() as root:
+            base = Path(root) / "plugins" / "nested"
+            (base / "icons").mkdir(parents=True)
+            (base / "icons" / "logo.svg").write_text("<svg/>")
+            self.assertEqual(
+                MODULE.verified_mirrored_icon_path(
+                    "./icons/logo.svg", base, "./plugins/example/repo/plugins/nested"
+                ),
+                "./plugins/example/repo/plugins/nested/icons/logo.svg",
+            )
+
+    def test_manifest_icon_cannot_escape_bundle(self):
+        with tempfile.TemporaryDirectory() as root:
+            workspace = Path(root)
+            base = workspace / "plugin"
+            base.mkdir()
+            (workspace / "outside.png").write_bytes(b"outside")
+            (base / "icons").mkdir()
+            (base / "icons" / "valid.svg").write_text("<svg/>")
+            (base / "icons" / "escape.svg").symlink_to(workspace / "outside.png")
+            for reference in (
+                "../outside.png",
+                "/tmp/absolute.png",
+                "icons/../..//outside.png",
+                "icons/escape.svg",
+                "[TODO: icons/valid.svg]",
+                "icons",
+                "icons/\x00bad.svg",
+            ):
+                with self.subTest(reference=repr(reference)):
+                    self.assertIsNone(
+                        MODULE.verified_mirrored_icon_path(
+                            reference, base, "./plugins/example/repo"
+                        )
+                    )
+            self.assertEqual(
+                MODULE.verified_mirrored_icon_path(
+                    "icons/valid.svg", base, "./plugins/example/repo"
+                ),
+                "./plugins/example/repo/icons/valid.svg",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
