@@ -138,6 +138,8 @@ def find_plugin_root(
         return PurePosixPath(names[0]).parent.parent
 
     expected = re.sub(r"[^a-z0-9]+", "", display_name.casefold())
+    if not expected:
+        return None
     matches: list[PurePosixPath] = []
     for name in names:
         root = PurePosixPath(name).parent.parent
