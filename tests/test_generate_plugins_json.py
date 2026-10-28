@@ -331,6 +331,42 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 sentinel.read_text(encoding="utf-8"), "working bundle"
             )
 
+    def test_case_insensitive_zip_paths_preserve_existing_mirror(self):
+        # A case-sensitive ZIP can contain files that overwrite one another
+        # when users install the generated plugin on Windows or macOS.
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            mirror = root / "GreenLv" / "codex-context-guard"
+            mirror.mkdir(parents=True)
+            sentinel = mirror / "existing-install.txt"
+            sentinel.write_text("working bundle", encoding="utf-8")
+            data = io.BytesIO()
+            with zipfile.ZipFile(data, "w") as writer:
+                writer.writestr(
+                    "codex-context-guard-main/.codex-plugin/plugin.json",
+                    '{"name":"context-guard"}',
+                )
+                writer.writestr("codex-context-guard-main/hooks/Hooks.json", "first")
+                writer.writestr("codex-context-guard-main/hooks/hooks.json", "second")
+            data.seek(0)
+            with (
+                zipfile.ZipFile(data) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(
+                    ValueError, "Case-insensitive selected archive path collision"
+                ):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "working bundle"
+            )
+
     def test_selected_source_symlink_preserves_existing_mirror(self):
         import io
         import stat
