@@ -89,6 +89,25 @@ class RemoteIconValidationTests(unittest.TestCase):
         errors = self.validate("assets/icon.png", oversized_png)
         self.assertTrue(any("exceeds 50KB" in error for error in errors), errors)
 
+    def test_corrupt_remote_icon_reports_clean_error(self):
+        archive = self.source_archive("assets/icon.png", b"PNG")
+        original_read = archive.read
+
+        def corrupt_icon(name, *args, **kwargs):
+            if str(name).endswith("/assets/icon.png"):
+                raise zipfile.BadZipFile("invalid icon payload CRC")
+            return original_read(name, *args, **kwargs)
+
+        with archive, patch.object(
+            validator, "fetch_repo_archive", return_value=archive
+        ), patch.object(archive, "read", side_effect=corrupt_icon):
+            errors, warnings = validator.validate_remote_repo("maker", "example")
+
+        self.assertEqual(warnings, [])
+        self.assertTrue(
+            any("corrupt archive member" in error for error in errors), errors
+        )
+
     def test_rejects_parent_path_in_remote_icon(self):
         errors = self.validate("../private/icon.png", b"not an icon")
         self.assertIn("composerIcon must be a safe plugin-relative path", errors)
