@@ -231,7 +231,15 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
     expected = normalize_match_key(plugin["name"])
     matching_roots: list[PurePosixPath] = []
     for root in roots:
-        manifest = load_manifest(archive, root)
+        try:
+            manifest = load_manifest(archive, root)
+        except (ValueError, UnicodeError, KeyError, zipfile.BadZipFile, EOFError):
+            # A broken unrelated nested manifest must not prevent an otherwise
+            # uniquely verified plugin from being selected. A corrupt target
+            # cannot match and remains blocked by the unique-name gate.
+            continue
+        if not isinstance(manifest, dict):
+            continue
         interface = manifest.get("interface", {})
         candidates = [
             manifest.get("name"),
@@ -239,7 +247,8 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
             plugin_root_relative_path(root).split("/")[-1],
         ]
         if isinstance(interface, dict):
-            candidates.extend([interface.get("displayName"), interface.get("shortDescription")])
+            # The short description is prose, not a unique source identity.
+            candidates.append(interface.get("displayName"))
         if any(normalize_match_key(candidate) == expected for candidate in candidates):
             matching_roots.append(root)
 
