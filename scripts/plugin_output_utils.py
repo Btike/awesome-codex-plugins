@@ -6,6 +6,7 @@ Kept separate from the marketplace generator to preserve the 500-line source lim
 from pathlib import Path, PurePosixPath
 import json
 import shutil
+import stat
 import zipfile
 
 RETIRED_BUNDLE_IDENTITIES = {("samuelbushi", "uizze"), ("waynehamadi", "datacircle-plugin")}
@@ -56,6 +57,12 @@ def verify_archive_members(
     """Check selected ZIP payloads before replacing a published mirror."""
     for relative_path in selected_paths:
         archive_name = plugin_root.joinpath(PurePosixPath(relative_path)).as_posix()
+        info = archive.getinfo(archive_name)
+        # Git archives can encode symlinks as their target text. Installing
+        # that payload as a regular file breaks runtime entry points, while
+        # following it may escape the reviewed source bundle.
+        if info.create_system == 3 and stat.S_ISLNK(info.external_attr >> 16):
+            raise ValueError(f"Selected source file is a symlink: {relative_path!r}")
         with archive.open(archive_name) as member:
             while member.read(1024 * 1024):
                 pass
