@@ -58,6 +58,10 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 MODULE.require_safe_mirror_destination(
                     root, root / "maker" / ".." / ".." / "outside"
                 )
+            with self.assertRaisesRegex(ValueError, "drive syntax"):
+                MODULE.require_safe_mirror_destination(
+                    root, root / "maker:stream" / "repo"
+                )
 
     def test_equivalent_readme_aliases_share_one_bundle_identity(self):
         with tempfile.TemporaryDirectory() as scratch:
@@ -563,6 +567,10 @@ class UntrustedArchivePathTests(unittest.TestCase):
             "./skills/../../../outside",
             "skills/evil\\..\\..\\outside",
             "skills/\x00bad",
+            "C:/Windows/evil.txt",
+            "C:relative-stream",
+            "assets/icon.svg:stream",
+            r"\\\\server\\share\\file",
         ):
             with self.subTest(path=repr(unsafe)):
                 self.assertEqual(MODULE.normalize_relative_path(unsafe), "")
