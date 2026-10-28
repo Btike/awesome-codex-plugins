@@ -238,6 +238,8 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
         return roots[0]
 
     expected = normalize_match_key(plugin["name"])
+    if not expected and plugin.get("_mirror_subpath") == "true":
+        raise ValueError(f"No uniquely matching nested manifest for {plugin['name']!r}")
     matching_roots: list[PurePosixPath] = []
     for root in roots:
         try:
