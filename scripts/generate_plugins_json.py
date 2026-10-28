@@ -26,7 +26,7 @@ from urllib.parse import quote, unquote
 
 # Both direct script execution and importlib-based tests load this helper.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plugin_output_utils import prune_unlisted_bundles, verify_archive_members, write_json
+from plugin_output_utils import prune_unlisted_bundles, require_real_mirror_parents, verify_archive_members, write_json
 
 README = Path(__file__).parent.parent / "README.md"
 OUTPUT = Path(__file__).parent.parent / "plugins.json"
@@ -442,6 +442,7 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     destination_root = PLUGINS_ROOT / plugin["owner"] / plugin["repo"]
     if use_subpath and plugin_root_relative:
         destination_root = destination_root / PurePosixPath(plugin_root_relative)
+    require_real_mirror_parents(PLUGINS_ROOT, destination_root)
     if destination_root.exists():
         shutil.rmtree(destination_root)
     destination_root.mkdir(parents=True, exist_ok=True)
@@ -518,7 +519,6 @@ def main() -> None:
             continue
         plugin["install_url"] = build_raw_manifest_url(plugin, plugin_root_relative)
 
-        # Determine icon path if available and actually mirrored
         icon_path: str | None = None
         interface = manifest.get("interface", {})
         if isinstance(interface, dict):
