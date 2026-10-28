@@ -785,5 +785,34 @@ class BranchAwareSourceTests(unittest.TestCase):
         )
 
 
+    def test_marketplace_icon_path_stays_within_bundle(self):
+        """A source manifest must not point the catalog icon outside its mirror."""
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins" / "maker" / "bundle"
+            (root / "assets").mkdir(parents=True)
+            (root / "assets" / "icon.svg").write_text("<svg/>", encoding="utf-8")
+            outside = Path(scratch) / "outside.svg"
+            outside.write_text("<svg/>", encoding="utf-8")
+
+            self.assertEqual(
+                MODULE.safe_mirrored_icon_path(root, "./assets/icon.svg"),
+                "assets/icon.svg",
+            )
+            for unsafe in (
+                "", ".", "../outside.svg", "../../../../outside.svg",
+                "/etc/passwd", "C:/Windows/system.ini",
+                "assets/../icon.svg", "assets\\icon.svg",
+                "./assets/icon.svg\\extra", "assets/missing.svg",
+                "assets/icon.svg\x00",
+            ):
+                with self.subTest(icon=repr(unsafe)):
+                    self.assertIsNone(MODULE.safe_mirrored_icon_path(root, unsafe))
+
+            (root / "assets" / "linked.svg").symlink_to(outside)
+            self.assertIsNone(
+                MODULE.safe_mirrored_icon_path(root, "assets/linked.svg")
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
