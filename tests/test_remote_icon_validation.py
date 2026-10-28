@@ -89,6 +89,25 @@ class RemoteIconValidationTests(unittest.TestCase):
         errors = self.validate("assets/icon.png", oversized_png)
         self.assertTrue(any("exceeds 50KB" in error for error in errors), errors)
 
+    def test_oversized_zip_icon_is_rejected_before_expansion(self):
+        archive = self.source_archive(
+            "assets/icon.png", b"X" * (validator.MAX_ICON_SIZE_BYTES + 1)
+        )
+        original_read = archive.read
+
+        def reject_icon_expansion(name, *args, **kwargs):
+            if str(name).endswith("/assets/icon.png"):
+                raise AssertionError("Oversized ZIP member must not be expanded")
+            return original_read(name, *args, **kwargs)
+
+        with archive, patch.object(
+            validator, "fetch_repo_archive", return_value=archive
+        ), patch.object(archive, "read", side_effect=reject_icon_expansion):
+            errors, warnings = validator.validate_remote_repo("maker", "example")
+
+        self.assertEqual(warnings, [])
+        self.assertTrue(any("exceeds 50KB" in error for error in errors), errors)
+
     def test_corrupt_remote_icon_reports_clean_error(self):
         archive = self.source_archive("assets/icon.png", b"PNG")
         original_read = archive.read
