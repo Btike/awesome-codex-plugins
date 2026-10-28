@@ -583,6 +583,9 @@ def main() -> None:
     # Local README links are retention-only; never fetch them from GitHub.
     plugins = [plugin for plugin in plugins if plugin.get("_local_bundle") != "true"]
     mirrored_entries: list[dict[str, object]] = []
+    # Track individual successful bundle records. One failed sibling in a
+    # multi-plugin repository must not erase another successfully mirrored one.
+    mirrored_plugins: list[dict[str, str]] = []
     skipped: list[str] = []
     for plugin in plugins:
         owner_repo = f"{plugin['owner']}/{plugin['repo']}"
@@ -610,9 +613,11 @@ def main() -> None:
                 )
 
         mirrored_entries.append(build_marketplace_entry(plugin, manifest, marketplace_path, icon_path))
+        mirrored_plugins.append(plugin)
 
-    # Filter out skipped plugins from public plugin list so counts stay accurate
-    ok_plugins = [p for p in plugins if f"{p['owner']}/{p['repo']}" not in skipped]
+    # Only individually successful records are public. A failed nested bundle
+    # cannot invalidate a distinct successfully mirrored sibling from the same repo.
+    ok_plugins = mirrored_plugins
 
     marketplace = {
         "name": "awesome-codex-plugins",
