@@ -113,7 +113,9 @@ def normalize_relative_path(value: str) -> str:
         return ""
     while value.startswith("./"):
         value = value[2:]
-    if ".." in PurePosixPath(value).parts:
+    # A manifest's "." would otherwise recursively mirror the entire source
+    # root, including files never declared as installable bundle assets.
+    if value in {"", "."} or ".." in PurePosixPath(value).parts:
         return ""
     return value
 
