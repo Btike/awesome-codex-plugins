@@ -167,6 +167,14 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                     symlinked_root, symlinked_root / "GreenLv" / "codex-context-guard"
                 )
 
+    def test_mirror_destination_rejects_parent_traversal(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            root.mkdir()
+            candidate = root / "GreenLv" / ".." / ".." / "outside"
+            with self.assertRaisesRegex(ValueError, "traversal"):
+                MODULE.require_real_mirror_parents(root, candidate)
+
     def test_context_guard_rejects_archive_traversal_before_replacing_bundle(self):
         import io
         import zipfile
