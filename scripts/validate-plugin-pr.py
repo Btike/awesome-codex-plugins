@@ -479,18 +479,19 @@ def main() -> None:
             owner, repo = entry["owner"], entry["repo"]
             label = f"{entry['display_name']} ({owner}/{repo})"
 
-            # Check if a local bundle already exists (generator may have run)
+            # An existing mirrored umbrella must not skip source validation
+            # for a second independently named plugin in the same repository.
+            source_key = f"{owner.casefold()}/{repo.casefold()}"
             local_dir = PLUGINS_DIR / owner / repo
             if (
-                not entry.get("source_ref")
-                and local_dir.exists()
-                and (local_dir / ".codex-plugin" / "plugin.json").exists()
+                source_counts.get(source_key, 0) == 1
+                and not entry.get("source_ref")
+                and (local_dir / ".codex-plugin" / "plugin.json").is_file()
             ):
-                print(f"  SKIP: {label} (local bundle exists, validated above)")
+                print(f"  SKIP: {label} (single existing local bundle)")
                 continue
 
             print(f"  Fetching {owner}/{repo}...")
-            source_key = f"{owner.casefold()}/{repo.casefold()}"
             errors, warnings = validate_remote_repo(
                 owner, repo, entry.get("source_ref"), entry["display_name"],
                 require_named_match=source_counts.get(source_key, 0) > 1,
