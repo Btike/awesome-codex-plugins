@@ -127,7 +127,13 @@ def find_plugin_root(
 ) -> PurePosixPath | None:
     """Select a specific nested manifest when a README entry names one bundle."""
     names = sorted(
-        (n for n in archive.namelist() if n.endswith("/.codex-plugin/plugin.json")),
+        (
+            n for n in archive.namelist()
+            if n.endswith("/.codex-plugin/plugin.json")
+            and not PurePosixPath(n).is_absolute()
+            and ".." not in PurePosixPath(n).parts
+            and "\\" not in n
+        ),
         key=len,
     )
     if not names:
