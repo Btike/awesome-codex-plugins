@@ -225,7 +225,7 @@ def resolve_plugin_root(archive: zipfile.ZipFile, names: set[str], plugin: dict[
     roots = find_plugin_roots(names)
     if not roots:
         raise ValueError("Archive does not contain .codex-plugin/plugin.json")
-    if len(roots) == 1:
+    if len(roots) == 1 and plugin.get("_mirror_subpath") != "true":
         return roots[0]
 
     expected = normalize_match_key(plugin["name"])
