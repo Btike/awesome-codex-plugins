@@ -309,7 +309,10 @@ def plugin_root_relative_path(plugin_root: PurePosixPath) -> str:
 def build_raw_manifest_url(plugin: dict[str, str], plugin_root_relative: str) -> str:
     manifest_path = ".codex-plugin/plugin.json"
     if plugin_root_relative:
-        manifest_path = f"{plugin_root_relative}/{manifest_path}"
+        # Nested ZIP paths may contain spaces, URL delimiters, or Unicode.
+        # Quote source bytes so the public raw install URL names the verified
+        # source manifest instead of a truncated or invalid request target.
+        manifest_path = f"{quote(plugin_root_relative, safe='/')}/{manifest_path}"
     source_ref = plugin.get("source_ref")
     raw_ref = quote(source_ref, safe="/") if source_ref else RAW_DEFAULT_BRANCH_REF
     return (
