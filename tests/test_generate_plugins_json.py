@@ -244,5 +244,54 @@ class BranchAwareSourceTests(unittest.TestCase):
         )
 
 
+class MultiBundleRootResolutionTests(unittest.TestCase):
+    def archive_for(self, plugin_names):
+        import io
+        import json
+        import zipfile
+
+        data = io.BytesIO()
+        with zipfile.ZipFile(data, "w") as output:
+            for directory, manifest_name in plugin_names:
+                output.writestr(
+                    f"demo-main/plugins/{directory}/.codex-plugin/plugin.json",
+                    json.dumps({"name": manifest_name, "interface": {
+                        "displayName": manifest_name.title(),
+                    }}),
+                )
+        data.seek(0)
+        return zipfile.ZipFile(data)
+
+    def test_named_shared_repo_entries_resolve_only_unique_manifest(self):
+        with self.archive_for([("alpha", "alpha"), ("beta", "beta")]) as archive:
+            names = set(archive.namelist())
+            plugin = {"name": "beta", "_mirror_subpath": "true"}
+            self.assertEqual(
+                MODULE.resolve_plugin_root(archive, names, plugin).as_posix(),
+                "demo-main/plugins/beta",
+            )
+            with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, names,
+                    {"name": "wrong bundle", "_mirror_subpath": "true"},
+                )
+            # Keep legacy single-entry umbrella behavior without silently
+            # publishing a different bundle for each new same-repo listing.
+            self.assertEqual(
+                MODULE.resolve_plugin_root(
+                    archive, names, {"name": "umbrella project"},
+                ).as_posix(),
+                "demo-main/plugins/alpha",
+            )
+
+    def test_ambiguous_shared_repo_manifest_name_fails_closed(self):
+        with self.archive_for([("alpha", "shared"), ("beta", "shared")]) as archive:
+            with self.assertRaisesRegex(ValueError, "No uniquely matching nested manifest"):
+                MODULE.resolve_plugin_root(
+                    archive, set(archive.namelist()),
+                    {"name": "shared", "_mirror_subpath": "true"},
+                )
+
+
 if __name__ == "__main__":
     unittest.main()
