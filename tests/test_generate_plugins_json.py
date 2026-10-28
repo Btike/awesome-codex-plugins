@@ -781,6 +781,8 @@ class UntrustedArchivePathTests(unittest.TestCase):
             "demo-main/plugins/alpha/skills/hook.py",
             "demo-main/plugins/alpha/skills/../../private.txt",
             "demo-main/plugins/alpha/skills/sub/../../../other.txt",
+            "demo-main/plugins/alpha/skills/hook.py:stream",
+            "demo-main/plugins/alpha/skills/back\\slash.py",
         }
         selected = set()
         MODULE.add_recursive_selection(selected, members, root, "skills")
