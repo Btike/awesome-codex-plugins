@@ -323,6 +323,16 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
                 "demo-main/plugins/alpha",
             )
 
+    def test_casefold_bundle_name_matches_validator(self):
+        # The validator uses casefold. The generated mirror must select the
+        # same source manifest for a Unicode label such as "Straße".
+        with self.archive_for([("strasse", "STRASSE"), ("other", "other")]) as archive:
+            selected = MODULE.resolve_plugin_root(
+                archive, set(archive.namelist()),
+                {"name": "Straße", "_mirror_subpath": "true"},
+            )
+            self.assertEqual(selected.as_posix(), "demo-main/plugins/strasse")
+
     def test_unrelated_corrupt_manifest_does_not_block_named_bundle(self):
         import zipfile
 
