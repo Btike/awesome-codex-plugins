@@ -297,7 +297,7 @@ def validate_remote_repo(
 
 def get_changed_plugin_dirs(base_ref: str) -> list[Path]:
     """Find plugin directories that were added or modified in this branch."""
-    output = git("diff", "--name-only", "--diff-filter=ACMR", base_ref, "--", "plugins/")
+    output = git("diff", "--merge-base", "--no-renames", "--name-only", "--diff-filter=ACMRD", base_ref, "HEAD", "--", "plugins/")
     if not output:
         return []
 
@@ -310,6 +310,13 @@ def get_changed_plugin_dirs(base_ref: str) -> list[Path]:
             continue
 
         if len(relative.parts) < 3 or relative.parts[0] != "plugins":
+            continue
+
+        # A removed manifest must still reach local validation, even when
+        # the entire bundle has disappeared from the contributor branch.
+        # --no-renames keeps a moved manifest visible as a deletion too.
+        if relative.parts[-2:] == (".codex-plugin", "plugin.json") and not file_path.is_file():
+            changed_dirs.add(file_path.parent.parent)
             continue
 
         current = file_path if file_path.is_dir() else file_path.parent
@@ -328,13 +335,20 @@ def get_new_readme_entries(base_ref: str) -> list[dict[str, str]]:
     Returns list of dicts with keys: display_name, url, owner, repo, description.
     """
     # Get the diff of README.md
-    diff = git("diff", base_ref, "--", "README.md")
+    diff = git("diff", "--merge-base", base_ref, "HEAD", "--", "README.md")
     if not diff:
         return []
 
     # Only the Community Plugins section contains Codex plugin listings.
     # Other sections such as Related Projects can link to non-plugin projects.
-    base_readme = git("show", f"{base_ref}:README.md")
+    # Diff and duplicate detection must compare against the SAME common ancestor.
+    # Reading the moving base-branch tip can hide a listing added on both branches.
+    merge_base = git("merge-base", base_ref, "HEAD")
+    if not merge_base:
+        raise RuntimeError(f"Cannot find merge base for README validation: {base_ref}")
+    base_readme = git("show", f"{merge_base}:README.md")
+    if not base_readme:
+        raise RuntimeError(f"Cannot read README at merge base {merge_base}")
     current_readme = README_PATH.read_text(encoding="utf-8") if README_PATH.exists() else ""
     base_urls = community_plugin_urls(base_readme)
     current_urls = community_plugin_urls(current_readme)
@@ -388,9 +402,14 @@ def main() -> None:
 
     rev_parse = git("rev-parse", "--verify", base_arg)
     if not rev_parse:
-        print(f"WARNING: Base ref '{base_arg}' not found, skipping validation")
-        print("  (This is normal for the first commit on a new branch without CI)")
-        sys.exit(0)
+        print(f"ERROR: Base ref '{base_arg}' not found; validation cannot run")
+        sys.exit(1)
+
+    # A PR may be behind main. Comparing both tips mislabels newer base
+    # changes as changes from the PR; compare only its own branch commits.
+    if not git("merge-base", base_arg, "HEAD"):
+        print(f"ERROR: No merge base between '{base_arg}' and HEAD")
+        sys.exit(1)
 
     has_failures = False
     total_errors = 0
