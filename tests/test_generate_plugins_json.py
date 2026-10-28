@@ -129,6 +129,24 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                     root, root / "maker:stream" / "repo"
                 )
 
+    def test_dot_manifest_path_cannot_mirror_entire_source_tree(self):
+        from pathlib import PurePosixPath
+
+        root = PurePosixPath("example-main")
+        names = {
+            "example-main/.codex-plugin/plugin.json",
+            "example-main/internal/not-for-distribution.txt",
+            "example-main/scripts/launcher.py",
+        }
+        for source in (".", "./.", "./"):
+            with self.subTest(source=source):
+                self.assertEqual(MODULE.normalize_relative_path(source), "")
+                selected = MODULE.collect_selected_paths(
+                    {"name": "example", "skills": source},
+                    names, root, {"owner": "demo", "repo": "example"},
+                )
+                self.assertEqual(selected, {".codex-plugin/plugin.json"})
+
     def test_source_specific_runtime_paths_accept_repository_case_variants(self):
         from pathlib import PurePosixPath
 
