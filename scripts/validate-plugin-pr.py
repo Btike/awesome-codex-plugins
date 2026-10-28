@@ -67,7 +67,8 @@ def normalize_github_repo_url(url: str) -> str:
         path_parts[2] = repo.lower()
     path = "/".join(path_parts)
     return urlunsplit(
-        (parsed.scheme.lower(), parsed.netloc.lower(), path, parsed.query, parsed.fragment)
+        # GitHub view/query fragments never identify another source plugin.
+        (parsed.scheme.lower(), parsed.netloc.lower(), path, "", "")
     )
 
 
