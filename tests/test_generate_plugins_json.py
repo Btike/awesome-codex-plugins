@@ -12,6 +12,53 @@ SPEC.loader.exec_module(MODULE)
 
 
 class GeneratedBundleCleanupTests(unittest.TestCase):
+    def test_mirror_refuses_symlinked_parent_before_deleting_old_bundle(self):
+        import io
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            root.mkdir()
+            external = Path(scratch) / "outside"
+            destination = external / "shared"
+            destination.mkdir(parents=True)
+            sentinel = destination / "keep.txt"
+            sentinel.write_text("outside must survive", encoding="utf-8")
+            (root / "maker").symlink_to(external, target_is_directory=True)
+
+            archive_data = io.BytesIO()
+            with zipfile.ZipFile(archive_data, "w") as creator:
+                creator.writestr(
+                    "shared-main/.codex-plugin/plugin.json",
+                    '{"name":"demo","interface":{}}',
+                )
+            archive_data.seek(0)
+            with (
+                zipfile.ZipFile(archive_data) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(ValueError, "symlink"):
+                    MODULE.mirror_plugin_bundle(
+                        {"name": "demo", "owner": "maker", "repo": "shared"}
+                    )
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "outside must survive"
+            )
+
+    def test_mirror_destination_rejects_dangling_root_and_traversal(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            root.symlink_to(Path(scratch) / "missing", target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "root must not be a symlink"):
+                MODULE.require_safe_mirror_destination(root, root / "maker" / "repo")
+            root.unlink()
+            root.mkdir()
+            with self.assertRaisesRegex(ValueError, "traversal"):
+                MODULE.require_safe_mirror_destination(
+                    root, root / "maker" / ".." / ".." / "outside"
+                )
+
     def test_equivalent_readme_aliases_share_one_bundle_identity(self):
         with tempfile.TemporaryDirectory() as scratch:
             readme = Path(scratch) / "README.md"
