@@ -138,7 +138,7 @@ def find_plugin_root(
         # Preserve legacy behavior for callers without a README display name.
         return PurePosixPath(names[0]).parent.parent
 
-    expected = re.sub(r"[^a-z0-9]+", "", display_name.casefold())
+    expected = re.sub(r"[\W_]+", "", display_name.casefold())
     if not expected:
         return None
     matches: list[PurePosixPath] = []
@@ -155,7 +155,7 @@ def find_plugin_root(
         interface = manifest.get("interface")
         display = interface.get("displayName") if isinstance(interface, dict) else None
         for candidate in (manifest.get("name"), display, root.name):
-            if re.sub(r"[^a-z0-9]+", "", str(candidate or "").casefold()) == expected:
+            if re.sub(r"[\W_]+", "", str(candidate or "").casefold()) == expected:
                 matches.append(root)
                 break
     # Do not silently validate the first unrelated bundle on a mismatched name.
