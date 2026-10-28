@@ -502,6 +502,29 @@ class MultiPluginManifestTests(unittest.TestCase):
         self.assertIsNotNone(selected)
         self.assertEqual(selected.as_posix(), "demo-main/plugins/strasse")
 
+    def test_traversal_manifest_is_not_a_remote_named_plugin(self) -> None:
+        # Source ZIP metadata is untrusted. The validator must match only
+        # actual repository-contained nested manifests.
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as output:
+            output.writestr(
+                "demo-main/../outside/.codex-plugin/plugin.json",
+                json.dumps({"name": "outside"}),
+            )
+            output.writestr(
+                "demo-main/plugins/safe/.codex-plugin/plugin.json",
+                json.dumps({"name": "safe"}),
+            )
+        with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
+            self.assertIsNone(VALIDATOR.find_plugin_root(
+                archive, display_name="outside", require_named_match=True,
+            ))
+            selected = VALIDATOR.find_plugin_root(
+                archive, display_name="safe", require_named_match=True,
+            )
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected.as_posix(), "demo-main/plugins/safe")
+
     def test_nonlatin_manifest_name_matches_generator(self) -> None:
         # A Unicode source name must select one verified nested manifest,
         # not collapse to an empty ASCII-only lookup key.
