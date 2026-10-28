@@ -497,6 +497,19 @@ def mirror_plugin_bundle(plugin: dict[str, str]) -> tuple[dict[str, object], str
     )
     mirrored_manifest = sanitize_metadata_only_manifest(manifest, plugin) if metadata_only else manifest
 
+    # Duplicate entries can have order-dependent contents between ZIP readers.
+    # Reject ambiguity in any selected member before replacing an installation.
+    selected_archive_names = {
+        plugin_root.joinpath(PurePosixPath(path)).as_posix()
+        for path in selected_paths
+    }
+    seen_selected_names: set[str] = set()
+    for member in archive.infolist():
+        if member.filename in selected_archive_names:
+            if member.filename in seen_selected_names:
+                raise ValueError(f"Duplicate selected ZIP member: {member.filename!r}")
+            seen_selected_names.add(member.filename)
+
     # Preflight selected ZIP members before deleting a previously working mirror.
     # A corrupt source archive must not leave its old installation wiped.
     for relative_path in selected_paths:
