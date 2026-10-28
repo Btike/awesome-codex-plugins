@@ -514,6 +514,36 @@ class MultiBundleRootResolutionTests(unittest.TestCase):
         data.seek(0)
         return zipfile.ZipFile(data)
 
+    def test_named_bundle_without_canonical_manifest_name_is_not_published(self):
+        import json
+
+        with self.archive_for([("alpha", "alpha"), ("beta", "beta")]) as archive:
+            source_read = archive.read
+
+            def nameless_alpha(name, *args, **kwargs):
+                if str(name).endswith("/plugins/alpha/.codex-plugin/plugin.json"):
+                    return json.dumps({
+                        "interface": {"displayName": "Alpha"}
+                    }).encode("utf-8")
+                return source_read(name, *args, **kwargs)
+
+            with patch.object(archive, "read", side_effect=nameless_alpha):
+                names = set(archive.namelist())
+                with self.assertRaisesRegex(
+                    ValueError, "No uniquely matching nested manifest",
+                ):
+                    MODULE.resolve_plugin_root(
+                        archive, names,
+                        {"name": "Alpha", "_mirror_subpath": "true"},
+                    )
+                self.assertEqual(
+                    MODULE.resolve_plugin_root(
+                        archive, names,
+                        {"name": "beta", "_mirror_subpath": "true"},
+                    ).as_posix(),
+                    "demo-main/plugins/beta",
+                )
+
     def test_named_shared_repo_entries_resolve_only_unique_manifest(self):
         with self.archive_for([("alpha", "alpha"), ("beta", "beta")]) as archive:
             names = set(archive.namelist())
