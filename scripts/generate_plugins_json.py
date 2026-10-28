@@ -94,6 +94,11 @@ EXTRA_MIRROR_PATHS = {
 }
 
 
+EXTRA_MIRROR_PATHS_BY_ID = {
+    repo.casefold(): paths for repo, paths in EXTRA_MIRROR_PATHS.items()
+}
+
+
 def normalize_relative_path(value: str) -> str:
     """Accept bundle-relative paths only, never archive traversal targets."""
     value = value.replace("\\", "/")
@@ -365,14 +370,15 @@ def collect_selected_paths(
                 if isinstance(screenshot, str):
                     add_recursive_selection(selected, all_names, plugin_root, screenshot)
 
-    for extra_path in EXTRA_MIRROR_PATHS.get(f"{plugin['owner']}/{plugin['repo']}", ()):
+    source_id = f"{plugin['owner']}/{plugin['repo']}".casefold()
+    for extra_path in EXTRA_MIRROR_PATHS_BY_ID.get(source_id, ()):
         add_recursive_selection(selected, all_names, plugin_root, extra_path)
 
     return selected
 
 
 def is_metadata_only_mirror(plugin: dict[str, str]) -> bool:
-    return f"{plugin['owner']}/{plugin['repo']}" in METADATA_ONLY_MIRROR_REPOS
+    return f"{plugin['owner']}/{plugin['repo']}".casefold() in METADATA_ONLY_MIRROR_REPOS
 
 
 def collect_metadata_only_paths(
@@ -403,7 +409,7 @@ def sanitize_metadata_only_manifest(manifest: dict[str, object], plugin: dict[st
     for key in ("skills", "commands", "hooks", "apps", "app", "appConfig"):
         sanitized.pop(key, None)
 
-    if f"{plugin['owner']}/{plugin['repo']}" == "mturac/everything-openai-codex":
+    if f"{plugin['owner']}/{plugin['repo']}".casefold() == "mturac/everything-openai-codex":
         repo_url = "https://github.com/mturac/everything-openai-codex"
         sanitized["description"] = (
             "Open-source Codex workflow collection with install profiles, repo "
