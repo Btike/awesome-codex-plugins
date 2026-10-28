@@ -58,6 +58,19 @@ def verify_archive_members(
     # Duplicate archive names are ambiguous: ZipFile.getinfo/read select the
     # last occurrence, but a different ZIP consumer may install the first.
     # Reject only selected members, before the existing bundle is removed.
+    # Windows and macOS commonly install into case-insensitive filesystems.
+    # Distinct ZIP members that differ only by case can overwrite one another,
+    # so fail before deleting the previous published bundle.
+    casefolded_paths: dict[str, str] = {}
+    for relative_path in sorted(selected_paths):
+        folded = relative_path.casefold()
+        previous = casefolded_paths.get(folded)
+        if previous is not None and previous != relative_path:
+            raise ValueError(
+                f"Case-insensitive selected archive path collision: {previous!r} / {relative_path!r}"
+            )
+        casefolded_paths[folded] = relative_path
+
     selected_archive_names = {
         plugin_root.joinpath(PurePosixPath(path)).as_posix()
         for path in selected_paths
