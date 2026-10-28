@@ -290,6 +290,47 @@ class GeneratedBundleCleanupTests(unittest.TestCase):
                 sentinel.read_text(encoding="utf-8"), "previous working plugin"
             )
 
+    def test_duplicate_selected_zip_member_preserves_existing_mirror(self):
+        # Duplicate ZIP entries have order-dependent contents. Fail before
+        # replacing an installed runtime instead of choosing one silently.
+        import io
+        import warnings
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "plugins"
+            mirror = root / "GreenLv" / "codex-context-guard"
+            mirror.mkdir(parents=True)
+            sentinel = mirror / "existing-install.txt"
+            sentinel.write_text("working bundle", encoding="utf-8")
+            data = io.BytesIO()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                with zipfile.ZipFile(data, "w") as writer:
+                    writer.writestr(
+                        "codex-context-guard-main/.codex-plugin/plugin.json",
+                        '{"name":"context-guard"}',
+                    )
+                    writer.writestr(
+                        "codex-context-guard-main/hooks/hooks.json", '{"hooks":[]}'
+                    )
+                    writer.writestr(
+                        "codex-context-guard-main/hooks/hooks.json", "other payload"
+                    )
+            data.seek(0)
+            with (
+                zipfile.ZipFile(data) as archive,
+                patch.object(MODULE, "fetch_repo_archive", return_value=archive),
+                patch.object(MODULE, "PLUGINS_ROOT", root),
+            ):
+                with self.assertRaisesRegex(ValueError, "Duplicate selected ZIP member"):
+                    MODULE.mirror_plugin_bundle(
+                        {"owner": "GreenLv", "repo": "codex-context-guard"}
+                    )
+            self.assertEqual(
+                sentinel.read_text(encoding="utf-8"), "working bundle"
+            )
+
     def test_selected_source_symlink_preserves_existing_mirror(self):
         import io
         import stat
