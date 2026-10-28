@@ -248,8 +248,10 @@ def validate_local_bundle(plugin_dir: Path) -> tuple[list[str], list[str]]:
             icon_path = plugin_dir / icon_rel
             if not icon_path.resolve().is_relative_to(plugin_dir.resolve()):
                 errors.append("composerIcon must stay within its plugin bundle")
-            elif not icon_path.exists():
-                errors.append(f"Icon file not found: {icon_rel} (resolved to {icon_path.relative_to(REPO_ROOT)})")
+            elif not icon_path.is_file():
+                # Directory-shaped icon paths must report a contributor error,
+                # not crash the validation job with IsADirectoryError.
+                errors.append(f"Icon file not found or not a regular file: {icon_rel} (resolved to {icon_path.relative_to(REPO_ROOT)})")
             else:
                 errors.extend(validate_icon_bytes(icon_rel, icon_path.read_bytes()))
 
