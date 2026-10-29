@@ -1,6 +1,6 @@
 ---
 name: amq-cli
-version: 0.116.2 # x-release-please-version
+version: 0.119.0 # x-release-please-version
 description: Coordinate coding agents through AMQ. Use for agent messages, inboxes, receipts, sessions, wake delivery, cross-project routing, managed launches, or AMQ diagnostics. Use amq-spec for collaborative design; do not use this for general message queues or single-agent work.
 metadata:
   short-description: Inter-agent messaging via AMQ CLI
@@ -55,9 +55,13 @@ follows the interrupt path.
 Use `--priority urgent` on `send` or `reply` for time-critical verdicts and
 unblocking requests. Other review responses remain normal by default.
 
-In Claude Code, `amq wake install-dialog-hook` makes the wake hold its doorbell
-while AskUserQuestion, ExitPlanMode, or a permission dialog is open; the held
-doorbell arrives after you answer, or when that turn ends.
+By default the wake rings a plain doorbell (text and Enter, never held for a
+dialog); `amq coop exec` prints `dialog guard: plain` or
+`dialog guard: proper (<harness>)`. In Claude Code,
+`amq wake install-dialog-hook` makes the wake hold its doorbell while
+AskUserQuestion, ExitPlanMode, or a permission dialog is open; the held
+doorbell arrives after you answer, or when that turn ends. Codex needs
+`--harness codex` and the entries trusted in `/hooks`.
 
 Wake settings (hold, debounce, preview, bell, input deferral, interrupt notice)
 apply to a running wake without a restart: `amq wake config --me <handle>`
