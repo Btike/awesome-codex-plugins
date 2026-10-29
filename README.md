@@ -588,6 +588,7 @@ The score is best used as a quick trust signal and triage summary (not the only 
 
 ## Related Projects
 
+- [AIGrowthRank](https://aigrowthrank.com/en/skills/) - Catalog of agent skills, Codex and Claude plugins and MCP servers for marketing and sales, with dated passive code reviews where public source is available.
 - [Astra Flash Orchestrator](https://github.com/ethanplusai/astra-flash-orchestrator) - Codex skill that keeps Astra on planning and review while DeepSeek V4.1 Flash handles implementation.
 - [awesome-ai-plugins](https://github.com/hashgraph-online/awesome-ai-plugins) - Umbrella list covering Codex, Claude Code, Gemini CLI, and MCP servers.
 - [codex-patch-overlay](https://github.com/salty-flower/codex-patch-overlay) - Patched Codex CLI builds carrying community-requested features upstream has not merged yet (live TUI reasoning streaming, completion sound, WebP image input, timed CLI queueing). Ready-to-run macOS/Linux binaries plus a Nix overlay, refreshed each upstream release.
