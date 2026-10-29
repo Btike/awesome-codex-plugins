@@ -17,7 +17,8 @@ description: >-
 license: PolyForm-Shield-1.0.0 (see LICENSE.txt)
 compatibility: Requires an Amazon Ads MCP server exposing the unified v1 campaign-management tools (create, query, update, and delete for campaigns, ad groups, targets, and ads); performance reviews also need unified v1 reporting. Servers built from Amazon's spec before the October 30, 2026 beta may reject or drop ENGAGEMENT and customerActionSettings; the skill notes the gap and verifies from Amazon's responses instead.
 metadata:
-  version: "0.1.0"
+  display-name: "Amazon Ads Review Requests"
+  version: "0.1.1"
 ---
 
 # Amazon Ads Review Requests

@@ -1,6 +1,6 @@
 {
   "skill_name": "amazon-ads-review-requests",
-  "skill_version": "0.1.0",
+  "skill_version": "0.1.1",
   "description": "Dry-run behavioral evals. There is no live MCP. The runner simulates the Kuudo Amazon Ads MCP's allv1_* campaign-management, account, and v1 reporting tools from per-eval fixtures; unknown tool names fail with 'Unknown tool'. It records every tool call with full arguments, plus the final user-facing reply. The simulator behaves like the server discovered on 2026-10-28: (1) Review Requests fields (goalSettings.goal, customerActionSettings) are undeclared but accepted, unless the fixture strips them, and customerActionSettings must use the documented shape; (2) campaign queries return ENGAGEMENT campaigns only when goalFilter includes ENGAGEMENT, unless the fixture sets reject_engagement_enum, in which case the query fails validation with the exact message the live Kuudo MCP returned on 2026-10-28; (3) context comes from set_active_profile, and queries fail until it is set; (4) creates return 207 success/error arrays by index. Writes succeed in the simulator, so a premature write is recorded, not blocked. Session context: today is 2026-12-01; the user is the owner of 'Acme Kitchen', a seller with US (profile 3333333333333333) and CA (profile 4444444444444444) profiles, advertiser account amzn1.ads-account.g.acmekitchen01. Prompts that continue an earlier conversation quote the plan the user is approving.",
   "evals": [
     {

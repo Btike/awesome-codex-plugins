@@ -13,6 +13,13 @@ Bump rules:
 
 Every bump also updates the `evals/evals.json` `skill_version`.
 
+## [0.1.1] - 2026-10-28
+
+### Added
+
+- `metadata.display-name` "Amazon Ads Review Requests": a human-readable label for catalogs
+  and skill pickers. Instructions and triggering are unchanged.
+
 ## [0.1.0] - 2026-10-28
 
 ### Added

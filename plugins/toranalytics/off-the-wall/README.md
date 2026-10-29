@@ -2,7 +2,7 @@
   <strong>English</strong> | <a href="README.ko.md">한국어</a> | <a href="README.ja.md">日本語</a> | <a href="README.zh-CN.md">中文</a>
 </p>
 
-0.2.2: Avoid duplicate routing context on primed session resume; compact still re-injects ([CHANGELOG](CHANGELOG.md)).
+Plain-language overview of what it does and does not do, with the test details at the end: [English](https://toranalytics.github.io/en/otw-what-it-does/) · [한국어](https://toranalytics.github.io/otw-what-it-does/) · [中文](https://toranalytics.github.io/zh/otw-what-it-does/). Release notes: [CHANGELOG](CHANGELOG.md).
 
 <p align="center">
   <img src="assets/hero.png" alt="Off the Wall: a pixel-art parrot on a terminal, quoting your past corrections" width="100%" />
@@ -43,7 +43,7 @@ the next session. Off the Wall keeps those messages locally and, before an answe
 words up to 6 corrections recorded in the same working directory. It uses the `claude` or `codex` CLI you already run,
 so it needs no separate API key. That does not mean nothing leaves your machine; see [Privacy](#privacy).
 
-> This is the unreleased 0.3.0 candidate, not a stable release. Measured so far: when the right past correction is quoted back, the agent follows personal preferences it cannot otherwise know far more often, in synthetic tests (see [Evidence](#evidence)). Not measured: a real user's long history, other models, or interactive use.
+> This is the 0.3.1 pre-release, not a stable release. Measured so far: when the right past correction is quoted back, the agent follows personal preferences it cannot otherwise know far more often, in synthetic tests (see [Evidence](#evidence)). Not measured: a real user's long history, other models, or interactive use.
 
 > Beta note: the evidence is exploratory, from one person’s text replays, not a general guarantee of fewer corrections, lower costs or better task completion. The input classifier can still mistake automated host or plugin text for a user reply, and it is not a perfect detector of human-written input. Check source messages locally before sharing aggregate report counts, because the counts are model classifications that can be wrong.
 
@@ -96,11 +96,11 @@ node bin/otw.mjs report --seed
 where the host history records a working directory. Turns with no known working directory are not stored (the count of skipped turns is reported)
 and are not promoted automatically. See [Scope and legacy records](#scope-and-legacy-records).
 
-Requires Node 18 or newer. Historical: an earlier version was tried on macOS with Claude Code 2.1.301 and codex-cli 0.162.1. A later Codex-only 0.2.0 live smoke record is linked under Evidence; Claude Code integration remains unverified in a live host. Live-host reload and effects of this 0.3.0 candidate remain unverified.
+Requires Node 18 or newer. Live-host checks so far: one Codex smoke run (0.2.0 on codex-cli 0.162.1) and one headless Claude Code run (2.1.311 with plugin 0.2.1: save and recall), both linked under Evidence. Interactive Claude Code use and live-host effects of the current main remain unverified.
 
 ### If nothing happens
 
-Codex does not run plugin hooks until you trust them in `/hooks` (or accept "Hooks need review" at startup and choose **Trust all**). `otw status` now shows the latest hook activity recorded in the local sessions directory and, when readable, the number of Codex trust entries. These diagnostics are not proof that hooks are currently enabled or that recall is effective. Claude Code integration remains unverified in a live host.
+Codex does not run plugin hooks until you trust them in `/hooks` (or accept "Hooks need review" at startup and choose **Trust all**). `otw status` now shows the latest hook activity recorded in the local sessions directory and, when readable, the number of Codex trust entries. These diagnostics are not proof that hooks are currently enabled or that recall is effective. Interactive Claude Code use remains unverified (one headless run was checked).
 
 Disabling the plugin in Codex config may not stop already-trusted hooks in `codex exec`; to stop OTW, set `{"recall":false,"routing":false,"capture":false}` in `~/.otw/config.json`.
 
@@ -126,6 +126,10 @@ At the end it prints a link that opens a prefilled post in this repo's
 kinds and their counts. Only the counts and kind names go in; none of your quoted words. The counts are model
 classifications and may be wrong, so check the source messages locally and review the post yourself before you
 publish anything. Nothing is posted for you.
+
+## See what would be recalled
+
+`node bin/otw.mjs explain "<prompt>"` (add `--cwd DIR` for another working directory) shows which stored corrections would be quoted before an answer to that prompt, with similarity scores and how many records were excluded. It is read-only: no model call, no file written. It is the quickest way to see why a quote you did not expect shows up. Available on main; not in the 0.3.1 release yet.
 
 ## What the agent sees
 
@@ -167,7 +171,7 @@ report. It shows the format only. It is not a real selection by relevance, worki
 - By default, prompts of 20+ trimmed characters get up to 6 quotes regardless of similarity, ranked by similarity
   and excluding zero overlap. The match guard uses the 0.18 floor for shorter prompts; `"recallWide": false` restores
   that floor for all prompts. These are engineering settings, not calibrated accuracy or relevance guarantees.
-- There is no memory-management UI or delete command in this iteration. To clear local records, delete files under
+- There is no memory-management UI. Since 0.3.1 `otw forget --all --yes` deletes every stored correction, the session state and the log, and `otw forget --project --yes` deletes only the current working directory's corrections; without `--yes` both only show what would be deleted. Provider-side copies and your Claude Code/Codex histories are not affected. Before 0.3.1, delete files under
   `~/.otw` yourself (see [Privacy](#privacy)). With `capture: false`, new prompt and answer excerpts are not kept
   (corrections already stored are not erased). `node bin/otw.mjs status` shows how many records are scoped and
   origin-tagged and how many are quarantined.
@@ -205,13 +209,15 @@ Claude Code 2.1.311, haiku, headless, plugin 0.2.1/0.2.3 code, synthetic store a
 | Off the Wall, former narrow default | 9/33 |
 | Off the Wall, `recallWide` (default since 0.3.0) | 17/33 |
 
+- A third run after fixing the scorer defect (experiment 5b, same store and tasks, 99 more runs): no recall 2/33, former narrow default 14/33, `recallWide` 25/33. It is one more sample with the same direction; the higher numbers come partly from the fix and partly from run-to-run variation, so the first table is not replaced. Record: [docs](docs/preference-experiment-2026-10-28.md).
 - The result was seen twice on two different stores (16/33 vs 8/33, then 17/33 vs 9/33). Against no recall, task by task: wide recall was better in 8 tasks and worse in none (sign test p = 0.008); the former narrow default was better in 5 and worse in none (p = 0.063).
 - The mechanism is retrieval: when the right correction is among the quotes shown the model follows it far more often; when it is not found, nothing changes. Offline, the former narrow default finds the right correction for 8 of 20 tasks (13 of 20 when the same correction has been repeated); `recallWide` finds more.
 - It does not always work: in one of the 11 tasks (a strict one-sentence answer format) the shown correction was not followed in any run. A second task that also stayed at 0/3 was a scoring defect found afterwards (the scorer rejected answers wrapped in a code fence); re-read from the transcripts, 5 of 6 runs that saw the correction followed it against 0 of 3 that did not. That recount is post hoc and the reported numbers above are the original ones, so they understate the effect.
 - No benefit was found where the default model already avoids the mistake (14 of 16 tasks passed without any recall), and the quoted correction did not beat a plain list of rules at 150 records. Such a list stops fitting as a history grows; that case was not tested.
 - Not shown: effect on a real user's history, other models, interactive sessions or long-term correction rates; the corrections here are written by a model.
-- Records, scripts and data: [docs/](docs/) (experiments 1-5), including the weaknesses found by an independent review.
+- Records, scripts and data: [docs/](docs/) (experiments 1-7), including the weaknesses found by an independent review.
 
+- [Live Claude Code headless smoke record (2.1.311, plugin 0.2.1; interactive use not tested; one run produced a very long malformed output that did not reproduce in 8 reruns)](docs/live-claude-smoke-2026-10-27.md)
 - [Live Codex smoke record (macOS, 0.2.0 on codex-cli 0.162.1; Claude Code not tested)](docs/live-codex-smoke-2026-10-27.md). This supplied historical record is not a live verification of 0.2.2.
 
 <p align="center">
@@ -308,7 +314,7 @@ There is no publisher telemetry and no separate API key. That is not the same as
 provider still sees these excerpts and your plan's usage or charges can apply. The default event and error logs omit raw
 excerpts. With `OTW_DEBUG` set, raw excerpts can be written to `~/.otw/log.jsonl`. History frames that are unknown or too
 large fail closed: project and pending state are not guessed from them. Deleting `~/.otw` forgets what Off the Wall stored, but it does not erase your Claude Code
-or Codex histories or any copies kept by a provider. There is no delete command yet. Sharing is manual: the Discussions
+or Codex histories or any copies kept by a provider. `otw forget` (since 0.3.1; see Scope and legacy records) deletes what Off the Wall stored; 0.3.0 and earlier have no delete command. Sharing is manual: the Discussions
 link only prefills counts and kind names, and you review it before publishing.
 
 ### Capture controls and deletion
@@ -332,7 +338,7 @@ link only prefills counts and kind names, and you review it before publishing.
   some relevant corrections can be left out.
 - Scope is per exact working directory. Related folders, moved projects and worktrees do not share recall.
 - Recall quotes your words to the model only. They are not shown to you during the session.
-- There is no memory-management UI or delete command yet.
+- There is no memory-management UI; `otw forget` (since 0.3.1) deletes stored records on request.
 
 ## Development
 

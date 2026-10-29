@@ -374,8 +374,7 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Development & Workflow",
-      "description": "Application-layer AST and argument policy gate for agent tool calls that checks configured rules before Python execution; complements, but does not replace, operating-system sandbox isolation.",
-      "icon": "./plugins/MvikManners/aw1-circuit-breaker/assets/icon.png"
+      "description": "Application-layer AST and argument policy gate for agent tool calls that checks configured rules before Python execution; complements, but does not replace, operating-system sandbox isolation."
     },
     {
       "name": "babok_analyst",

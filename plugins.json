@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
-  "last_updated": "2026-10-28",
+  "last_updated": "2026-10-29",
   "total": 341,
   "categories": [
     "Development & Workflow",
@@ -1478,7 +1478,7 @@
       "description": "A terminal board Codex writes to and you read, with kanban, checklists, charts, forms and live logs kept as plain Markdown files.",
       "category": "Development & Workflow",
       "source": "awesome-codex-plugins",
-      "install_url": "https://raw.githubusercontent.com/LeeSwallow/stickypane/HEAD/.codex-plugin/plugin.json"
+      "install_url": "https://raw.githubusercontent.com/LeeSwallow/stickypane/HEAD/plugin/.codex-plugin/plugin.json"
     },
     {
       "name": "Stop That Shit",
