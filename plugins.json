@@ -3,7 +3,7 @@
   "name": "awesome-codex-plugins",
   "version": "1.0.0",
   "last_updated": "2026-10-29",
-  "total": 341,
+  "total": 343,
   "categories": [
     "Development & Workflow",
     "Tools & Integrations"
@@ -2292,6 +2292,16 @@
       "install_url": "https://raw.githubusercontent.com/vshulcz/deja-vu/HEAD/codex-plugin/.codex-plugin/plugin.json"
     },
     {
+      "name": "DESIGN:OS 3D Blender",
+      "url": "https://github.com/jangtrinh/design-os-3d-blender",
+      "owner": "jangtrinh",
+      "repo": "design-os-3d-blender",
+      "description": "Source-available skills and MCP server that let Codex model, render and verify mechanical parts natively in Blender 5.2 LTS, licensed under PolyForm Shield.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/jangtrinh/design-os-3d-blender/HEAD/.codex-plugin/plugin.json"
+    },
+    {
       "name": "dex",
       "url": "https://github.com/exmergo/dex",
       "owner": "exmergo",
@@ -3320,6 +3330,16 @@
       "category": "Tools & Integrations",
       "source": "awesome-codex-plugins",
       "install_url": "https://raw.githubusercontent.com/val-town/plugins/HEAD/plugin/.codex-plugin/plugin.json"
+    },
+    {
+      "name": "varg",
+      "url": "https://github.com/vargHQ/skills",
+      "owner": "vargHQ",
+      "repo": "skills",
+      "description": "How to make any AI video: find the skill, the options to show and the steps (no key needed), with the keyless varg how to MCP and the varg MCP for video, image, voice and music generation.",
+      "category": "Tools & Integrations",
+      "source": "awesome-codex-plugins",
+      "install_url": "https://raw.githubusercontent.com/vargHQ/skills/HEAD/.codex-plugin/plugin.json"
     },
     {
       "name": "VidSeeds.ai",
